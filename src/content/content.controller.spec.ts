@@ -13,7 +13,7 @@ describe('ContentController', () => {
     controller = module.get<ContentController>(ContentController);
   });
 
-  it('should be defined', () => {
+  it('should be definedd', () => {
     expect(controller).toBeDefined();
   });
 });
