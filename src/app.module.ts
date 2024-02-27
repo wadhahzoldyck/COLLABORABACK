@@ -7,6 +7,7 @@ import { CommentModule } from './comment/comment.module';
 import { ContentModule } from './content/content.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { VersionController } from './versioning/version.controller';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { ConfigModule } from '@nestjs/config';
     CommentModule,
     ContentModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController,VersionController],
   providers: [AppService],
 })
 export class AppModule {}
