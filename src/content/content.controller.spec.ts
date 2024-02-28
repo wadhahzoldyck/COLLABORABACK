@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContentController } from './content.controller';
 
@@ -12,7 +13,7 @@ describe('ContentController', () => {
     controller = module.get<ContentController>(ContentController);
   });
 
-  it('should be defined', () => {
+  it('should be definedd', () => {
     expect(controller).toBeDefined();
   });
 });
