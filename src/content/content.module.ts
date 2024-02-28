@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Content, ContentSchema } from 'src/schema/content.schema';
+import { Content, ContentSchema } from './schema/content.schema';
 
 @Module({
   imports: [
