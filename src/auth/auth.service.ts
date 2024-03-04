@@ -16,6 +16,7 @@ import { Token } from './types/schema/token.schema';
 import { Reset } from './schema/reset.schema';
 import { MailerService } from '@nestjs-modules/mailer';
 import { NotFoundError } from 'rxjs';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +32,8 @@ export class AuthService {
   async signup(dto: UserDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
     const newUser = await this.userModel.create({
+      firstname: dto.firstname,
+      lastname: dto.lastname,
       email: dto.email,
       password: hash,
     });
@@ -38,7 +41,7 @@ export class AuthService {
     await this.updateRtHash(newUser.id, tokens.refresh_token);
     return tokens;
   }
-  async signin(dto: UserDto): Promise<Tokens> {
+  async signin(dto: LoginDto): Promise<Tokens> {
     const user = await this.userModel.findOne({ email: dto.email }).exec();
     if (!user) throw new ForbiddenException('Access denied');
 

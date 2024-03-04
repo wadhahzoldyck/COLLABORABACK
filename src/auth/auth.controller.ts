@@ -15,6 +15,7 @@ import { Request, Response } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Token } from './types/schema/token.schema';
 import { Model } from 'mongoose';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -25,12 +26,15 @@ export class AuthController {
 
   @Post('/signup')
   signup(@Body() dto: UserDto): Promise<Tokens> {
+    if (dto.password !== dto.confirm_password) {
+      throw new BadRequestException('Password does not match');
+    }
     return this.authService.signup(dto);
   }
 
   @Post('/signin')
   async signin(
-    @Body() dto: UserDto,
+    @Body() dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     // Await the signin method call to get the Tokens object
@@ -41,6 +45,8 @@ export class AuthController {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, //1 week
     });
+    console.log(tokens);
+
     return tokens;
   }
 
@@ -95,7 +101,7 @@ export class AuthController {
       throw new BadRequestException('Password does not match');
     }
     this.authService.resetPassword(token, password);
-    
+
     return {
       message: 'Password updated successfully',
     };
