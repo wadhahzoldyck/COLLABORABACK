@@ -6,6 +6,8 @@ import { CommentModule } from './comment/comment.module';
 import { ContentModule } from './content/content.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { ReplyModule } from './reply/reply.module';
+
 import { AuthModule } from './auth/auth.module';
 import { VersionController } from './versioning/version.controller';
 
@@ -20,7 +22,9 @@ import { VersionController } from './versioning/version.controller';
     DocumentModule,
     CommentModule,
     ContentModule,
+    ReplyModule,
     AuthModule,
+
   ],
   controllers: [AppController,VersionController],
   providers: [AppService],
