@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  nestjs:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: mongodb+srv://collaboradocs:collaboradocs@cluster2.a0uigsw.mongodb.net/?retryWrites=true&w=majority
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
