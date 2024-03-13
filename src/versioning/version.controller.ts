@@ -3,9 +3,11 @@
 import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common';
 import { documents } from './mock-data';
 
-@Controller({ path: 'hello' })
+
+@Controller()
 export class VersionController {
     @Get('document/:version')
+    
     findAll(@Param('version') version: string) {
         const document = documents.find(doc => doc.version === version);
         return document ? document.content : 'Document not found.';
