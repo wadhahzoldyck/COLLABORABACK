@@ -9,6 +9,8 @@ import { Comment, CommentSchema } from '../comment/schema/comment.schema';
   imports: [
     MongooseModule.forFeature([{ name: Reply.name, schema: Replyschema }]),
     MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
+    
+
   ],
   providers: [ReplyService],
   controllers: [ReplyController]
