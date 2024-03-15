@@ -1,3 +1,4 @@
+
 import {
   BadRequestException,
   ForbiddenException,
@@ -5,6 +6,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+
 import { UserDto } from './dto/user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schema/user.schema';
@@ -41,7 +43,9 @@ export class AuthService {
     await this.updateRtHash(newUser.id, tokens.refresh_token);
     return tokens;
   }
+
   async signin(dto: LoginDto): Promise<Tokens> {
+
     const user = await this.userModel.findOne({ email: dto.email }).exec();
     if (!user) throw new ForbiddenException('Access denied');
 
@@ -49,6 +53,7 @@ export class AuthService {
     if (!passwordMatches) throw new ForbiddenException('Password mismatch');
 
     const tokens = await this.getTokens(user.id, user.email);
+
     const { access_token, refresh_token } = tokens;
     await this.updateRtHash(user.id, tokens.refresh_token);
     return tokens;
