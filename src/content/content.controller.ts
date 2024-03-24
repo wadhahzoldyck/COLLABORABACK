@@ -20,6 +20,7 @@ import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import * as fs from 'fs'; // Import the fs module
 import * as path from 'path';
 import { Content } from './schema/content.schema';
+import { v2 as cloudinary } from 'cloudinary';
 
 import { Request, Response } from 'express';
 
@@ -49,11 +50,6 @@ export class ContentController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() contentData: any) {
     return this.contentService.update(id, contentData);
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.contentService.remove(id);
   }
 
   @Post('upload')
@@ -181,7 +177,8 @@ export class ContentController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = path.extname(file.originalname); // Use path.extname for better compatibility
           const filename = `${uniqueSuffix}${ext}`;
           callback(null, filename);
@@ -191,21 +188,22 @@ export class ContentController {
   )
   async handleUpload(
     @UploadedFile() file: Express.Multer.File | undefined,
-    @Req() req: Request, @Res() res: Response
+    @Req() req: Request,
+    @Res() res: Response,
   ) {
     console.log('file:', file);
-  
+
     // Handle cases where no file is uploaded
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-  
+
     try {
       // Save file path to the database using optional chaining
       const savedContent = await this.contentService.create({
         attachmentUrl: file?.filename, // Access filename only if file exists
       });
-  
+
       // Use 201 Created for successful creation
       return res.status(201).json(savedContent); // Chain methods for clarity
     } catch (error) {
@@ -219,8 +217,6 @@ export class ContentController {
     const files = fs.readdirSync('./uploads'); // Read files from your storage directory
     return files;
   }
-
-
 
   @Post('uploadOnCloud')
   @ApiConsumes('multipart/form-data') // Specify that this endpoint consumes multipart/form-data
@@ -240,23 +236,48 @@ export class ContentController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = path.extname(file.originalname); // Use path.extname for better compatibility
-          const filename = `${uniqueSuffix}${ext}`;
+        filename: (req, file, callback) => {       
+          const filename = `${file.originalname}`;
+          console.log(filename)
           callback(null, filename);
         },
       }),
     }),
   )
-  async uploadFileOnCloud(@UploadedFile() file: Express.Multer.File) {
-    const url = await this.contentService.uploadFile(file);
-    return { url }; // Return the URL of the uploaded file
+  async uploadFileOnCloud(@UploadedFile() file: Express.Multer.File,@Req() req: Request,
+  @Res() res: Response) {
+    const files = await this.contentService.uploadFile(file);
+    console.log(files)
+    return res.status(200).json({ data:files });;
   }
 
   @Get('getFromCloud')
-  async getImages(): Promise<string[]> {
-    return await this.contentService.fetchImages();
+  async getImages(@Req() req: Request,
+  @Res() res: Response){
+   const files = await this.contentService.fetchImages();
+   console.log("files: ",files)
+    res.status(200).json({data:files})
   }
-  
+
+  @Delete(':id')
+  async deleteFile(@Param('id') fileId: string,@Req() req: Request,
+  @Res() res: Response) {
+
+      const result = await this.contentService.deleteFile(fileId);
+      console.log(fileId);
+       return res.status(200).json({ data:result });;
+ 
+  }
+
+  @Delete('deleteFile/:id')
+  async deleteFileFromCloud(@Param('id') fileId: string): Promise<void> {
+    try {
+      // Use Cloudinary SDK or API to delete the file
+      await cloudinary.uploader.destroy(fileId);
+      // Handle successful deletion
+    } catch (error) {
+      // Handle deletion error
+      throw new Error('Failed to delete file');
+    }
+  }
 }
