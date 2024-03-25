@@ -1,18 +1,19 @@
-// comment.gateway.ts
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: true })
-export class CommentGateway {
+@WebSocketGateway({ port: 3002 })
+export class CommentGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private clients: Socket[] = [];
 
   handleConnection(client: Socket) {
     this.clients.push(client);
+    console.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
     this.clients = this.clients.filter((c) => c.id !== client.id);
+    console.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('comment')
