@@ -27,6 +27,6 @@ import { VersionController } from './versioning/version.controller';
 
   ],
   controllers: [AppController,VersionController],
-  providers: [AppService],
+  providers: [AppService,],
 })
 export class AppModule {}
