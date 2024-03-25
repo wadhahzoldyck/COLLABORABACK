@@ -5,14 +5,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Comment, CommentSchema } from './schema/comment.schema';
 import { CommentGateway } from './comment.gateway';
 
-
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
   ],
   controllers: [CommentController],
-  providers: [CommentService,CommentGateway]
-
+  providers: [CommentService, CommentGateway]
 })
 export class CommentModule implements OnModuleInit {
   constructor(private commentGateway: CommentGateway) {}
@@ -23,5 +21,4 @@ export class CommentModule implements OnModuleInit {
       this.commentGateway.server.on('disconnect', (socket) => this.commentGateway.handleDisconnect(socket));
     }
   }
-
 }
