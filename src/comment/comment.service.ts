@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { Comment, CommentDocument } from './schema/comment.schema';
 import { Reply } from 'src/reply/schema/reply.schema';
 
+
 @Injectable()
 export class CommentService {
   constructor(
@@ -31,7 +32,11 @@ export class CommentService {
     }
     return comment.replies;
   }
-  
+  async createCommentWithDocument(documentId: string, commentaire: string): Promise<Comment> {
+    const createdComment = new this.commentModel({ commentaire, document: documentId });
+
+    return await createdComment.save();
+  }
   async delete(commentId: string): Promise<void> {
     const deletedComment = await this.commentModel.findByIdAndDelete(commentId);
 
