@@ -11,6 +11,11 @@ export class CommentController {
   async create(@Body() commentData: any) {
     return this.commentService.create(commentData);
   }
+  @Post(':documentId')
+  async createComment(@Param('documentId') documentId: string, @Body('commentaire') commentaire: string) {
+    // Ajoutez un commentaire avec un document spécifique
+    return this.commentService.createCommentWithDocument(documentId, commentaire);
+  }
 
   @Put(':id')
   async update(@Param('id') commentId: any, @Body() updatedData: any) {

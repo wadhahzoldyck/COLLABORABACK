@@ -1,18 +1,22 @@
 //comment.schema.ts
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Reply } from "../../reply/schema/reply.schema";
-
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Reply } from '../../reply/schema/reply.schema';
+import {
+  Document as MongooseDocument,
+  Schema as MongooseSchema,
+} from 'mongoose';
 @Schema({
-    timestamps: true,
+  timestamps: true,
 })
 export class Comment {
+  @Prop()
+  commentaire: string;
 
-    @Prop()
-    commentaire: string;
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Reply' }] })
+  replies: Reply[];
 
-    @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Reply' }] })
-    replies: Reply[];
+   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Document' })
+   document: MongooseDocument;
 }
 
 export type CommentDocument = Comment & Document;
