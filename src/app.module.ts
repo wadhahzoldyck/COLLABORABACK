@@ -9,7 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ReplyModule } from './reply/reply.module';
 
 import { AuthModule } from './auth/auth.module';
-import { VersionController } from './versioning/version.controller';
+import { VersioningModule } from './versioning/versioning.module';
 
 @Module({
   imports: [
@@ -24,9 +24,12 @@ import { VersionController } from './versioning/version.controller';
     ContentModule,
     ReplyModule,
     AuthModule,
+    VersioningModule,
 
   ],
-  controllers: [AppController,VersionController],
-  providers: [AppService,],
+
+  controllers: [AppController],
+  providers: [AppService],
+
 })
 export class AppModule {}
