@@ -66,8 +66,13 @@ export class AuthController {
 
   @Get('/user')
   authentifaction(@Req() request: Request) {
-    const accesToken = request.headers.authorization.replace('Bearer ', '');
-    return this.authService.Authuser(accesToken);
+    const authorizationHeader = request.headers.authorization;
+    if (!authorizationHeader) {
+      throw new UnauthorizedException('Authorization header is missing');
+    }
+
+    const accessToken = authorizationHeader.replace('Bearer ', '');
+    return this.authService.Authuser(accessToken);
   }
 
   @Post('/refresh')

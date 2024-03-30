@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Comment } from '../comment/schema/comment.schema';
+import { Comment, CommentDocument } from '../comment/schema/comment.schema';
 import { Reply } from './schema/reply.schema';
+import { CommentModule } from 'src/comment/comment.module';
 
 @Injectable()
 export class ReplyService {
@@ -37,6 +38,10 @@ export class ReplyService {
         const reply = await this.ReplyModel.findById(replyId).exec();
         return reply;
     }
+    async findAll(commentId: CommentDocument): Promise<Reply[]> {
+        const replies = await this.ReplyModel.find({ comment: commentId }).exec();
+        return replies;
+      }
     async delete(replyId: string): Promise<void> {
         const deletedReply = await this.ReplyModel.findByIdAndDelete(replyId);
 

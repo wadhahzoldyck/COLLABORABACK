@@ -27,7 +27,9 @@ import { VersioningModule } from './versioning/versioning.module';
     VersioningModule,
 
   ],
+
   controllers: [AppController],
   providers: [AppService],
+
 })
 export class AppModule {}

@@ -1,35 +1,51 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Put } from '@nestjs/common';
+// comment.controller.ts
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
 import { CommentService } from './comment.service';
+import { Reply } from 'src/reply/schema/reply.schema';
 
 @Controller('comment')
 export class CommentController {
-    constructor(private readonly CommentService: CommentService) {}
+  constructor(private readonly commentService: CommentService) {}
 
-    @Post()
-    async create(@Body() CommentData: any) {
-      return this.CommentService.create(CommentData);
-    }
-    @Put(':id')
-    async update(@Param('id') commentId: string, @Body() updatedData: any) {
-        return this.CommentService.update(commentId, updatedData);
-    }
-    @Delete(':id')
-    async delete(@Param('id') commentId: string) {
-        return this.CommentService.delete(commentId);
-    }
-    @Get(':id')
-    async show(@Param('id') commentId: string) {
-        const comment = await this.CommentService.findById(commentId);
+  @Post()
+  async create(@Body() commentData: any) {
+    return this.commentService.create(commentData);
+  }
+  @Post(':documentId')
+  async createComment(@Param('documentId') documentId: string, @Body('commentaire') commentaire: string) {
+    // Ajoutez un commentaire avec un document spécifique
+    return this.commentService.createCommentWithDocument(documentId, commentaire);
+  }
 
-        if (!comment) {
-            throw new NotFoundException(`Comment with ID ${commentId} not found`);
-        }
+  @Put(':id')
+  async update(@Param('id') commentId: any, @Body() updatedData: any) {
+    return this.commentService.update(commentId, updatedData);
+  }
+  
+  @Get(':id/replies')
+  async getRepliesByCommentId(@Param('id') commentId: string) {
+    return this.commentService.findRepliesByCommentId(commentId);
+  }
 
-        return comment;
+  @Delete(':id')
+  async delete(@Param('id') commentId: string) {
+    return this.commentService.delete(commentId);
+  }
+
+  @Get(':id')
+  async show(@Param('id') commentId: string) {
+    const comment = await this.commentService.findById(commentId);
+
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID ${commentId} not found`);
     }
-    @Get()
-    async showAll() {
-        const comments = await this.CommentService.findAll();
-        return comments;
-    }
+
+    return comment;
+  }
+
+  @Get()
+  async showAll() {
+    const comments = await this.commentService.findAll();
+    return comments;
+  }
 }
