@@ -7,6 +7,8 @@ import { ContentModule } from './content/content.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { ReplyModule } from './reply/reply.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { VersioningModule } from './versioning/versioning.module';
@@ -18,17 +20,17 @@ import { VersioningModule } from './versioning/versioning.module';
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.DB_URI),
-    
+
     DocumentModule,
     CommentModule,
     ContentModule,
     ReplyModule,
     AuthModule,
     VersioningModule,
+     ],
 
-  ],
+  controllers: [AppController,VersionController],
 
-  controllers: [AppController],
   providers: [AppService],
 
 })
