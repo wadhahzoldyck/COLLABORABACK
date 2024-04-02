@@ -1,17 +1,37 @@
 // comment.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Comment, CommentDocument } from './schema/comment.schema';
+import mongoose, { Model } from 'mongoose';
+import { Comment} from './schema/comment.schema';
 import { Reply } from 'src/reply/schema/reply.schema';
-
+import { Document } from '../document/schema/document.schema'; // Importez le modèle Document depuis le bon chemin
+import { Types } from 'mongoose';
 
 @Injectable()
 export class CommentService {
   constructor(
-    @InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>,
+    @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
+    @InjectModel(Document.name) private readonly documentModel: Model<Document>,
   ) {}
-
+  async createWithDocumentId(docid:string, comment:string): Promise<Comment> {
+    try {
+      // Vérifiez si le document existe réellement
+      const document = await this.documentModel.findById(docid);
+      if (!document) {
+        throw new NotFoundException('Document not found');
+      }
+      // Créez le commentaire en associant le document
+      const createdComment = new this.commentModel({
+        commentaire:comment,
+        document: document
+      });
+      return createdComment.save();
+    } catch (error) {
+      throw error;
+    }
+  }
+  
+  
   async create(commentData: any): Promise<Comment> {
     const createdComment = new this.commentModel(commentData);
     return createdComment.save();
@@ -32,11 +52,7 @@ export class CommentService {
     }
     return comment.replies;
   }
-  async createCommentWithDocument(documentId: string, commentaire: string): Promise<Comment> {
-    const createdComment = new this.commentModel({ commentaire, document: documentId });
 
-    return await createdComment.save();
-  }
   async delete(commentId: string): Promise<void> {
     const deletedComment = await this.commentModel.findByIdAndDelete(commentId);
 
@@ -49,10 +65,9 @@ export class CommentService {
     const comment = await this.commentModel.findById(commentId).exec();
     return comment;
   }
-
-  async findAll(): Promise<Comment[]> {
-    const comments = await this.commentModel.find().exec();
+  async findCommentByIdDoc(iddoc: string): Promise<Comment[]> {
+    const comments = await this.commentModel.find({ document: iddoc }).exec();
     return comments;
-  }
+}
 
 }
