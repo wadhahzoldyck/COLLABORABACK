@@ -10,7 +10,7 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      -mongo-data: /data/dump:/dump
+      - 'mongo-data:/data/db:/dump'  # Corrected volume syntax
   collaboradocs:
     image: ahmedbelhaj2/collaboradocdocker
     restart: always
