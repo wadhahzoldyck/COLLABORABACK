@@ -7,6 +7,7 @@ import mongoose, {
   Types,
 } from 'mongoose';
 import { Document } from '../../document/schema/document.schema';
+import { User } from '../../auth/schema/user.schema';
 @Schema({
   timestamps: true,
 })
@@ -19,6 +20,9 @@ export class Comment {
 
   @Prop() // Modifiez cette ligne pour accepter une chaîne de caractères
   document?: string;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' }) 
+    owner: User;
+
 }
 
 export type CommentDocument = Comment & Document;

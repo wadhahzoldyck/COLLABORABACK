@@ -12,16 +12,20 @@ export class CommentController {
   //   return this.commentService.create(commentData);
   // }
 
-  @Post(':documentId')
-  async createComment(@Param('documentId') documentId: string, @Body('commentaire') comment: string) {
+  @Post(':documentId/:userId')
+    async createComment(@Param('documentId') documentId: string, @Param('userId') userId: string,@Body('commentaire') comment: string) {
     try {
-      const createdComment = await this.commentService.createWithDocumentId(documentId, comment);
+      const createdComment = await this.commentService.createWithDocumentIdUserId(documentId, userId, comment);
       return createdComment;
     } catch (error) {
       throw error;
     }
   }
-
+  @Get(':iddoc')
+  async showByDoc(@Param('iddoc') iddoc: string) {
+    const comments = await this.commentService.findCommentByIdDoc(iddoc);
+    return comments;
+  }
   @Put(':id')
   async update(@Param('id') commentId: any, @Body() updatedData: any) {
     return this.commentService.update(commentId, updatedData);
@@ -48,9 +52,5 @@ export class CommentController {
   //   return comment;
   // }
 
-  @Get(':iddoc')
-  async showByDoc(@Param('iddoc') iddoc: string) {
-    const comments = await this.commentService.findCommentByIdDoc(iddoc);
-    return comments;
-  }
+
 }
