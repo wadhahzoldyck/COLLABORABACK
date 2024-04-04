@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
 import { ReplyService } from './reply.service';
+import { Reply } from './schema/reply.schema';
+import { CommentDocument } from 'src/comment/schema/comment.schema';
 
 @Controller('reply')
 export class ReplyController {
@@ -38,6 +40,20 @@ export class ReplyController {
         } catch (error) {
             return { success: false, message: error.message };
         }
+    }
+    @Get('all/:id')
+    async showAll(@Param('id') commentId: CommentDocument): Promise<Reply[]> {
+      try {
+        const replies = await this.replyService.findAll(commentId);
+  
+        if (!replies || replies.length === 0) {
+          throw new NotFoundException(`Replies for comment with ID ${commentId} not found`);
+        }
+  
+        return replies;
+      } catch (error) {
+        throw new NotFoundException(`Replies for comment with ID ${commentId} not found`);
+      }
     }
     @Delete(':id')
     async delete(@Param('id') replyId: string): Promise<any> {

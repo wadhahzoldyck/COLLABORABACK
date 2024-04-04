@@ -1,11 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+
 import * as cors from 'cors';
 import { v2 as cloudinary } from 'cloudinary';
 
 
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as multer from 'multer';
+
+import * as cookiesPaser from 'cookie-parser';
 async function bootstrap() {
 
   cloudinary.config({
@@ -14,7 +18,6 @@ async function bootstrap() {
     api_secret: 'oU_090rFYt9UmwyCUxT7HvY-0lk',
   });
   
-
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
    
@@ -25,7 +28,14 @@ async function bootstrap() {
   app.use(cors());
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+  app.enableCors({
+    origin: ['http://localhost:5173','http://localhost:3001','http://localhost:3002'],
+    credentials: true,
+  });
+    app.use(multer({ dest: './uploads' }).single('file')); // Change dest to your desired upload directory
 
+ 
+  app.use(cookiesPaser());
   await app.listen(3000);
 }
 bootstrap();
