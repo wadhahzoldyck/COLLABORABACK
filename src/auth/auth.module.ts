@@ -8,13 +8,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { TokenSchema } from './types/schema/token.schema';
 import { ResetSchema } from './schema/reset.schema';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { DocumentSchema } from '../document/schema/document.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
     MongooseModule.forFeature([{ name: 'Token', schema: TokenSchema }]),
     MongooseModule.forFeature([{ name: 'Reset', schema: ResetSchema }]),
-
+    MongooseModule.forFeature([{ name: 'Document', schema: DocumentSchema }]),
     MailerModule.forRoot({
       transport: {
         service: 'gmail',
@@ -29,6 +30,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     }),
 
     JwtModule.register({}),
+    
   ],
 
   controllers: [AuthController],

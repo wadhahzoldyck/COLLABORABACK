@@ -49,9 +49,10 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('get-document')
   async handleGetDocument(@ConnectedSocket()client: Socket, @MessageBody() data: any) {
-    const{documentId, docName}=data ;
-    console.log(data)
-    const document = await this.findOrCreateDocument(documentId, docName);
+    const{documentId, docName,isAuth}=data ;
+    console.log("l isAth")
+    console.log(isAuth)
+    const document = await this.findOrCreateDocument(documentId, docName,isAuth) ;
 
     client.join(documentId);
     client.emit('load-document', document);
@@ -65,7 +66,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('get-create')
-  async findOrCreateDocument(id: string, docName: string) {
+  async findOrCreateDocument(id: string, docName: string,user:any) {
     console.log(docName);
     if (!id) return;
 
@@ -78,6 +79,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
       _id: id,
       data: defaultValue,
       documentName: docName,
+      owner:user
     });
     const { data } = document;
 
