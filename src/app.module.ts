@@ -11,8 +11,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
-import { VersioningModule } from './versioning/versioning.module';
-import { VersionController } from './versioning/version.controller';
+
 
 @Module({
   imports: [
@@ -27,10 +26,9 @@ import { VersionController } from './versioning/version.controller';
     ContentModule,
     ReplyModule,
     AuthModule,
-    VersioningModule,
      ],
 
-  controllers: [AppController,VersionController],
+  controllers: [AppController],
 
   providers: [AppService],
 
