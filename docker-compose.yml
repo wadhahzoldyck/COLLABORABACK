@@ -10,7 +10,7 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - ./data/db:/dump # Corrected volume syntax
+      - ./data/db:/dump # Corrected volume syntax, assuming you want to mount the host's ./data/db to /dump in the container
   collaboradocs:
     image: ahmedbelhaj2/collaboradocdocker:1.0
     restart: always
