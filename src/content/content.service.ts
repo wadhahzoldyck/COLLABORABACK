@@ -22,7 +22,8 @@ export class ContentService {
     const content = await this.contentModel.find();
     return content.map((item) => ({
       text: item.text,
-      name:item.name,
+      name: item.name,
+      publicId: item.publicId,
       attachmentUrl: item.attachmentUrl,
     }));
   }
@@ -58,17 +59,15 @@ export class ContentService {
       const { resources } = await cloudinary.search
         .expression('folder:collaboradoc') // Replace with your Cloudinary folder name
         .execute();
-  
+
       // Extract URLs and file names from the resources
-      const imagesData = resources.map((resource) => (
-        {
+      const imagesData = resources.map((resource) => ({
         url: resource.secure_url,
         name: resource.filename,
-        id:resource.public_id,
-        
+        id: resource.public_id,
       }));
-     
-      console.log("imagesData", imagesData);
+
+      console.log('imagesData', imagesData);
       return imagesData;
     } catch (error) {
       console.error('Error fetching images from Cloudinary:', error);
@@ -78,19 +77,21 @@ export class ContentService {
   async uploadFile(file: Express.Multer.File): Promise<Content> {
     try {
       const result = await cloudinary.uploader.upload(file.path, {
-        folder: 'collaboradoc',resource_type:'raw',
+        folder: 'collaboradoc',
+        resource_type: 'raw',
       });
       const fileUrl = result.secure_url;
       const publicId = result.public_id; // Save this ID
       const name = result.original_filename;
-      console.log("name of file :",name);
+      console.log('name of file :', name);
+      console.log('publicId :', publicId);
       // Save the file URL to the database
       const savedFile = await this.contentModel.create({
         attachmentUrl: fileUrl,
-        name:name,
+        name: name,
         publicId: publicId,
       });
-
+      console.log(savedFile);
       return savedFile; // Return the saved file object
     } catch (error) {
       console.error('Error uploading file to Cloudinary:', error);
