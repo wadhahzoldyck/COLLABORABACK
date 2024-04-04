@@ -12,6 +12,7 @@ import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { VersioningModule } from './versioning/versioning.module';
+import { VersionController } from './versioning/version.controller';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { VersioningModule } from './versioning/versioning.module';
     VersioningModule,
      ],
 
-  controllers: [AppController],
+  controllers: [AppController,VersionController],
 
   providers: [AppService],
 
