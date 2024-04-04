@@ -1,6 +1,6 @@
 // app.gateway.ts
 import { InjectModel } from '@nestjs/mongoose';
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect, MessageBody, ConnectedSocket } from '@nestjs/websockets';
 import { Model } from 'mongoose';
 import { Server, Socket } from 'socket.io';
 import { Document } from './schema/document.schema';
@@ -43,8 +43,12 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('get-document')
-  async handleGetDocument(client: Socket, documentId: string) {
-    const document = await this.findOrCreateDocument(documentId);
+
+  async handleGetDocument(@ConnectedSocket()client: Socket, @MessageBody() data: any) {
+    const{documentId, docName,isAuth}=data ;
+    console.log("l isAth")
+    console.log(isAuth)
+    const document = await this.findOrCreateDocument(documentId, docName,isAuth) ;
 
     client.join(documentId);
     client.emit('load-document', document);
@@ -66,7 +70,9 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
 
   @SubscribeMessage('get-create')
-  async findOrCreateDocument(id: string) {
+
+  async findOrCreateDocument(id: string, docName: string,user:any) {
+    console.log(docName);
     if (!id) return;
 
 
@@ -75,7 +81,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { data } = document2;
       return data
     }
-    const document = await this.documentModel.create({ _id: id, data: defaultValue });
+
+    const document = await this.documentModel.create({
+      _id: id,
+      data: defaultValue,
+      documentName: docName,
+      owner:user
+    });
     const { data } = document;
 
     return data;

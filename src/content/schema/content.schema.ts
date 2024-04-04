@@ -6,6 +6,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 export class Content {
   @Prop()
   text: string;
+  @Prop()
+  name: string;
 
   @Prop()
   attachmentUrl: string; // Store the URL or path to the uploaded file
