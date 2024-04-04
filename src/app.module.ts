@@ -29,7 +29,7 @@ import { VersioningModule } from './versioning/versioning.module';
     VersioningModule,
      ],
 
-  controllers: [AppController,VersionController],
+  controllers: [AppController],
 
   providers: [AppService],
 
