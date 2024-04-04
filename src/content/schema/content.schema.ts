@@ -13,6 +13,6 @@ export class Content {
   attachmentUrl: string; 
   
   @Prop()
-  publicId:string;
+  publicId:string
 }
 export const ContentSchema = SchemaFactory.createForClass(Content);

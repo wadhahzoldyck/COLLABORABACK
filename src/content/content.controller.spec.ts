@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContentController } from './content.controller';
+import { ContentService } from './content.service';
+import {ContentSchema } from './schema/content.schema'; // Import the Content and ContentSchema
 
 describe('ContentController', () => {
   let controller: ContentController;
@@ -7,12 +9,13 @@ describe('ContentController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ContentController],
+      providers: [ContentService, { provide: 'ContentModel', useFactory: () => ContentSchema }],
     }).compile();
 
     controller = module.get<ContentController>(ContentController);
   });
 
-  it('should be definedd', () => {
+  it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 });
