@@ -6,30 +6,43 @@ import { Comment} from './schema/comment.schema';
 import { Reply } from 'src/reply/schema/reply.schema';
 import { Document } from '../document/schema/document.schema'; // Importez le modèle Document depuis le bon chemin
 import { Types } from 'mongoose';
+import { User } from '../auth/schema/user.schema';
 
 @Injectable()
 export class CommentService {
   constructor(
     @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
     @InjectModel(Document.name) private readonly documentModel: Model<Document>,
-  ) {}
-  async createWithDocumentId(docid:string, comment:string): Promise<Comment> {
+    @InjectModel(User.name) private readonly userModel: Model<User>, // Injection du modèle User
+
+    ) {}
+  async createWithDocumentIdUserId(docid:string, userId: string, comment:string): Promise<Comment> {
     try {
       // Vérifiez si le document existe réellement
       const document = await this.documentModel.findById(docid);
       if (!document) {
         throw new NotFoundException('Document not found');
       }
-      // Créez le commentaire en associant le document
+
+      // Recherchez l'utilisateur par son ID
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Créez le commentaire en associant le document et l'utilisateur
       const createdComment = new this.commentModel({
-        commentaire:comment,
-        document: document
+        commentaire: comment,
+        document: document,
+        owner: user,
       });
+
       return createdComment.save();
     } catch (error) {
       throw error;
     }
-  }
+}
+
   
   
   async create(commentData: any): Promise<Comment> {
