@@ -1,6 +1,6 @@
 // app.gateway.ts
 import { InjectModel } from '@nestjs/mongoose';
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect, MessageBody, ConnectedSocket } from '@nestjs/websockets';
 import { Model } from 'mongoose';
 import { Server, Socket } from 'socket.io';
 import { Document } from './schema/document.schema';
