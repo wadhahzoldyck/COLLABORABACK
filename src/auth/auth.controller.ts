@@ -4,9 +4,11 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserDto } from './dto/user.dto';
@@ -16,6 +18,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Token } from './types/schema/token.schema';
 import { Model } from 'mongoose';
 import { LoginDto } from './dto/login.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -52,6 +55,7 @@ export class AuthController {
 
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('/logout')
   logout(
     @Res({ passthrough: true }) response: Response,
@@ -74,6 +78,8 @@ export class AuthController {
     const accessToken = authorizationHeader.replace('Bearer ', '');
     return this.authService.Authuser(accessToken);
   }
+
+
 
   @Post('/refresh')
   refreshTokens(
@@ -112,5 +118,17 @@ export class AuthController {
     return {
       message: 'Password updated successfully',
     };
+  }
+
+  @Get('search')
+  async searchUsers(@Query('q') query: string, @Query('documentId') documentId: string) {
+    try {
+      const users = await this.authService.searchUsersNotInDocument(documentId, query);
+      console.log(users);
+      return users;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw new Error('Error searching users');
+    }
   }
 }

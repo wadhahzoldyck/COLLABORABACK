@@ -10,6 +10,7 @@ import { DocumentSchema } from './schema/document.schema';
   controllers: [DocumentController],
   imports:[    MongooseModule.forFeature([{ name: 'Document', schema: DocumentSchema }]),
 ],
-  providers: [DocumentService,AppGateway]
+  providers: [DocumentService,AppGateway],
+  exports:[DocumentService]
 })
 export class DocumentModule {}
