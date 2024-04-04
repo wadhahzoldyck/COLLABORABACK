@@ -29,7 +29,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   app.enableCors({
-    origin: ['http://localhost:5173','http://localhost:3001','http://localhost:3002'],
+    origin: '*',
     credentials: true,
   });
     app.use(multer({ dest: './uploads' }).single('file')); // Change dest to your desired upload directory
