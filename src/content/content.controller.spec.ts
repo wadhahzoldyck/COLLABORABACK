@@ -9,7 +9,7 @@ describe('ContentController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ContentController],
-      providers: [ContentService, { provide: 'ContentModel', useFactory: () => ContentSchema }],
+      providers: [ContentService, { provide: 'ContentModel', useValue: ContentSchema }],
     }).compile();
 
     controller = module.get<ContentController>(ContentController);

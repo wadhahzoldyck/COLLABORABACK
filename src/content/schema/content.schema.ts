@@ -14,5 +14,8 @@ export class Content {
   
   @Prop()
   publicId:string
+
+  @Prop({ type: Object })
+    data: Object;
 }
 export const ContentSchema = SchemaFactory.createForClass(Content);

@@ -13,7 +13,6 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 
 import { VersioningModule } from './versioning/versioning.module';
-import { VersionController } from './versioning/version.controller';
 import { FolderModule } from './folder/folder.module';
 
 @Module({
@@ -23,7 +22,7 @@ import { FolderModule } from './folder/folder.module';
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.DB_URI),
-
+    
     DocumentModule,
     CommentModule,
     ContentModule,

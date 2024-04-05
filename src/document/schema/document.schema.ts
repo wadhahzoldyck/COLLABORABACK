@@ -7,6 +7,7 @@
 
 
   import { Comment } from '../../comment/schema/comment.schema';
+  import { Content } from '../../content/schema/content.schema';
 
   @Schema({
     timestamps: true,
@@ -17,8 +18,7 @@
     @Prop()
     documentName: string;
 
-    @Prop({ type: Object })
-    data: Object;
+    
 
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' }) 
     owner: User;
@@ -28,7 +28,8 @@
 
     @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Comment' }] })
     comments: Comment[];
-
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Content' }) 
+    data: Content;
   }
 
   export const DocumentSchema = SchemaFactory.createForClass(Document);

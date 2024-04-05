@@ -23,6 +23,7 @@ export class ContentService {
       name: item.name,
       publicId: item.publicId,
       attachmentUrl: item.attachmentUrl,
+      data:item.data
     }));
   }
 

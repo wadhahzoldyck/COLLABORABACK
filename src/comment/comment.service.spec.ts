@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommentService } from './comment.service';
 import { CommentSchema } from './schema/comment.schema'; // Import the CommentModel
+import { UserSchema } from '../auth/schema/user.schema';
+import { DocumentSchema } from '../document/schema/document.schema';
 
-describe('CommentService', () => {
+describe('ContentService', () => {
   let service: CommentService;
 
   beforeEach(async () => {
@@ -10,6 +12,8 @@ describe('CommentService', () => {
       providers: [
         CommentService,
         { provide: 'CommentModel', useValue: CommentSchema },
+         { provide: 'DocumentModel', useValue: DocumentSchema },
+        { provide: 'UserModel', useValue: UserSchema },
       ],
     }).compile();
 
