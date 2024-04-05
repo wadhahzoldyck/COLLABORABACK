@@ -103,6 +103,7 @@ export class VersionController {
     }
     const reversedDocument = [...versioning.document].reverse();
     const data = reversedDocument[versionId].data;
+    
     const document = await this.documentModel.findById(id).exec();
     console.log(document);
     if (!document) {
