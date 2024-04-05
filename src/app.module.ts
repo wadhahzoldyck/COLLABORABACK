@@ -11,6 +11,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
+
 import { VersioningModule } from './versioning/versioning.module';
 import { VersionController } from './versioning/version.controller';
 import { FolderModule } from './folder/folder.module';
@@ -28,6 +29,7 @@ import { FolderModule } from './folder/folder.module';
     ContentModule,
     ReplyModule,
     AuthModule,
+
     VersioningModule,
     FolderModule,
      ],
