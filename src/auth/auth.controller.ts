@@ -121,9 +121,9 @@ export class AuthController {
   }
 
   @Get('search')
-  async searchUsers(@Query('q') query: string, @Query('documentId') documentId: string) {
+  async searchUsers(@Query('q') query: string) {
     try {
-      const users = await this.authService.searchUsersNotInDocument(documentId, query);
+      const users = await this.authService.searchUsers(query);
       console.log(users);
       return users;
     } catch (error) {

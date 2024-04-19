@@ -19,7 +19,6 @@ import { Reset } from './schema/reset.schema';
 import { MailerService } from '@nestjs-modules/mailer';
 import { NotFoundError } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
-import { Document } from '../document/schema/document.schema';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +26,6 @@ export class AuthService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Token.name) private readonly tokenModel: Model<Token>,
     @InjectModel(Reset.name) private readonly resetModel: Model<Reset>,
-    @InjectModel(Document.name) private readonly documentModel: Model<Document>,
 
     private jwtService: JwtService,
     private mailerService: MailerService,
@@ -196,11 +194,10 @@ export class AuthService {
     );
   }
 
-  async searchUsersNotInDocument(documentId: string, query: string): Promise<User[]> {
+  async searchUsers(query: string): Promise<User[]> {
     try {
+      // Perform search based on query (e.g., using regex for partial matches)
       const regex = new RegExp(query, 'i'); // Case-insensitive regex
-  
-      // Find users matching the search query
       const users = await this.userModel.find({
         $or: [
           { firstname: { $regex: regex } },
@@ -208,24 +205,10 @@ export class AuthService {
           { email: { $regex: regex } },
         ],
       }).exec();
-  
-      // Find the document by ID and get its usersWithAccess
-      const document = await this.documentModel
-        .findById(documentId)
-        .select('usersWithAccess')
-        .exec();
-  
-      // Extract user IDs from the document's usersWithAccess
-      const documentUserIds = document.usersWithAccess.map(user => user._id.toString());
-  
-      // Filter out users that are already in the document's access list
-      const usersNotInDocument = users.filter(user => !documentUserIds.includes(user._id.toString()));
-  
-      return usersNotInDocument;
+      return users;
     } catch (error) {
       console.error('Error searching users:', error);
       throw new Error('Error searching users');
     }
   }
-  
 }

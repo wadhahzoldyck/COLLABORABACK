@@ -5,11 +5,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Folder } from './schema/folder.schema';
 import { CreateFolderDto } from './dto/folder.dto';
+import { Document } from '../document/schema/document.schema';
 
 @Injectable()
 export class FolderService {
   constructor(
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
+    @InjectModel(Document.name) private readonly documentModel: Model<Document>,
   ) {}
 
   async create(createFolderDto: CreateFolderDto): Promise<Folder> {
@@ -17,8 +19,8 @@ export class FolderService {
     return createdFolder.save();
   }
 
-  async findAll(): Promise<Folder[]> {
-    return this.folderModel.find().exec();
+  async findAll(ownerId: string): Promise<Folder[]> {
+    return this.folderModel.find({ owner: ownerId }).exec();
   }
 
   async findOne(id: string): Promise<Folder> {
@@ -41,11 +43,13 @@ export class FolderService {
 
   async remove(id: string): Promise<Folder> {
     const deletedFolder = await this.folderModel
-      .findOneAndDelete({ _id: id })
+      .findByIdAndDelete(id)
       .exec();
     if (!deletedFolder) {
       throw new NotFoundException('Folder not found');
     }
+    await this.documentModel.deleteMany({ folder: id }).exec();
+
     return deletedFolder;
   }
 }

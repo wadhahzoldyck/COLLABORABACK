@@ -68,4 +68,14 @@ export class DocumentService {
     }
     return document.usersWithAccess.map((user) => user._id.toString);
   }
+  async findDocumentsWithoutFolder(): Promise<Document[]> {
+    try {
+      const documentsWithoutFolder = await this.documentModel.find({ folder: null }).exec();
+      return documentsWithoutFolder;
+    } catch (error) {
+      throw new NotFoundException('Documents without folder not found');
+    }
+  }
+
+  
 }

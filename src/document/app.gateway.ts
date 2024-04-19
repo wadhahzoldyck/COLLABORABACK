@@ -92,8 +92,8 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
             _id: id,
             data: defaultValue,
             documentName: docName,
-            owner: user
-        });
+            owner: user,
+            folder: idFolder      });
 
         const { data } = newDocument;
 
