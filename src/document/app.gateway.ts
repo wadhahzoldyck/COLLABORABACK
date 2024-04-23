@@ -4,6 +4,7 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnectio
 import { Model } from 'mongoose';
 import { Server, Socket } from 'socket.io';
 import { Document } from './schema/document.schema';
+import { Folder } from '../folder/schema/folder.schema';
 
 const defaultValue = "";
 @WebSocketGateway({
@@ -14,7 +15,11 @@ const defaultValue = "";
 
 export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
-    @InjectModel(Document.name) private readonly documentModel: Model<Document>,) { }
+    @InjectModel(Document.name) private readonly documentModel: Model<Document>,
+    @InjectModel(Folder.name) private readonly foldertModel: Model<Folder>
+    ) { }
+   
+
 
 
 
@@ -45,10 +50,10 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('get-document')
 
   async handleGetDocument(@ConnectedSocket()client: Socket, @MessageBody() data: any) {
-    const{documentId, docName,isAuth}=data ;
+    const{documentId, docName,isAuth,idFolder}=data ;
     console.log("l isAth")
     console.log(isAuth)
-    const document = await this.findOrCreateDocument(documentId, docName,isAuth) ;
+    const document = await this.findOrCreateDocument(documentId, docName,isAuth,idFolder) ;
 
     client.join(documentId);
     client.emit('load-document', document);
@@ -70,26 +75,40 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
 
   @SubscribeMessage('get-create')
-
-  async findOrCreateDocument(id: string, docName: string,user:any) {
-    console.log(docName);
+  async findOrCreateDocument(id: string, docName: string, user: any, idFolder: string) {
+    console.log(idFolder);
     if (!id) return;
 
+    try {
+        // Check if the document already exists
+        const existingDocument = await this.documentModel.findById(id).exec();
+        if (existingDocument) {
+            const { data } = existingDocument;
+            return data; // Return existing document data
+        }
 
-    const document2 = await this.documentModel.findById(id).exec();
-    if (document2) {
-      const { data } = document2;
-      return data
+        // Document doesn't exist, create a new one
+        const newDocument = await this.documentModel.create({
+            _id: id,
+            data: defaultValue,
+            documentName: docName,
+            owner: user
+        });
+
+        const { data } = newDocument;
+
+        // Find the folder by ID and update its documents list with the new document
+        const folder = await this.foldertModel.findById(idFolder).exec();
+        if (folder) {
+            folder.documents.push(newDocument._id); // Assuming documents is an array field in the folder model
+            await folder.save(); // Save the updated folder
+        }
+
+        return data; // Return the data of the newly created document
+    } catch (error) {
+        console.error('Error creating or associating document:', error);
+        throw error;
     }
+}
 
-    const document = await this.documentModel.create({
-      _id: id,
-      data: defaultValue,
-      documentName: docName,
-      owner:user
-    });
-    const { data } = document;
-
-    return data;
-  }
 }

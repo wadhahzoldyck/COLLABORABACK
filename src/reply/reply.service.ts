@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Comment, CommentDocument } from '../comment/schema/comment.schema';
 import { Reply } from './schema/reply.schema';
-import { CommentModule } from 'src/comment/comment.module';
+import { CommentModule } from '../comment/comment.module';
 
 @Injectable()
 export class ReplyService {

@@ -16,11 +16,9 @@ export class DocumentController {
     return this.documentService.getDocumentById(id);
   }
 
-  @Get('owner/:id')
-  async getByOwnerId(@Param('id') ownerId: string): Promise<Document[]> {
-    const documents = await this.documentService.findByOwnerId(ownerId);
-
-  
+  @Get('folder/:id')
+  async findByFolderId(@Param('id') folderid: string): Promise<Document[]> {
+    const documents = await this.documentService.findByFolderId(folderid);
 
     return documents;
   }
