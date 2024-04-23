@@ -1,16 +1,21 @@
 // document.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { Document, DocumentSchema } from './schema/document.schema'; // Ensure you're importing the Document and DocumentSchema from the correct file
 import { AddUserToDocumentDto } from './dto/document.dto';
+import { UserDataDTO } from '../auth/dto/userdata.dto';
+import { User } from '../auth/schema/user.schema';
+
 import { Folder } from '../folder/schema/folder.schema';
 
 @Injectable()
 export class DocumentService {
   constructor(
     @InjectModel(Document.name) private readonly documentModel: Model<Document>,
+    @InjectModel(User.name) private readonly userModel: Model<Document>,
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
+
 
   ) {}
 
@@ -68,4 +73,7 @@ export class DocumentService {
     }
     return document.usersWithAccess.map((user) => user._id.toString);
   }
+  
+ 
+  
 }
