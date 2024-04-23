@@ -15,7 +15,6 @@ export class CommentGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
   }
   
-
   handleDisconnect(client: Socket) {
     this.clients = this.clients.filter((c) => c.id !== client.id);
     console.log(`Client disconnected: ${client.id}`);
@@ -28,7 +27,6 @@ export class CommentGateway implements OnGatewayConnection, OnGatewayDisconnect 
     // Broadcast the comment to all connected clients except the sender
     this.clients.forEach((c) => {
       if (c.id !== client.id) {
-        console.log(c.id)
         c.emit('newComment', comment);
       }
     });
@@ -42,6 +40,26 @@ export class CommentGateway implements OnGatewayConnection, OnGatewayDisconnect 
     this.clients.forEach((c) => {
       if (c.id !== client.id) {
         c.emit('newReply', reply,commentID);
+      }
+    });
+  }
+  @SubscribeMessage('deletComment')
+  handle(@ConnectedSocket() client: Socket,@MessageBody() commentId: string): void {
+    this.clients.forEach((c) => {
+      if (c.id !== client.id) {
+        c.emit('deletedcomment', commentId);
+      }
+  });
+  }
+
+  @SubscribeMessage('editComment') // New method to handle comment editing
+  handleEditComment(@MessageBody() editedComment: any, @ConnectedSocket() client: Socket): void {
+    // Process the edited comment (e.g., update in the database)
+
+    // Broadcast the edited comment to all connected clients except the sender
+    this.clients.forEach((c) => {
+      if (c.id !== client.id) {
+        c.emit('updateComment', editedComment);
       }
     });
   }
