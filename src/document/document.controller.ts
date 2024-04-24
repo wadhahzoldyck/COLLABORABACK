@@ -1,5 +1,12 @@
 // document.controller.ts
-import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { DocumentService } from './document.service';
 import { Document } from './schema/document.schema';
 import { AddUserToDocumentDto } from './dto/document.dto';
@@ -7,8 +14,6 @@ import { AddUserToDocumentDto } from './dto/document.dto';
 @Controller('document')
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
-
-
 
   @Get('doc/:id')
   async getDocumentById(@Param('id') id: string): Promise<Document> {
@@ -36,5 +41,4 @@ export class DocumentController {
   async findDocumentsWithoutFolder(): Promise<Document[]> {
     return this.documentService.findDocumentsWithoutFolder();
   }
-  
 }

@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   ForbiddenException,
@@ -45,7 +44,6 @@ export class AuthService {
   }
 
   async signin(dto: LoginDto): Promise<Tokens> {
-
     const user = await this.userModel.findOne({ email: dto.email }).exec();
     if (!user) throw new ForbiddenException('Access denied');
 
@@ -198,13 +196,15 @@ export class AuthService {
     try {
       // Perform search based on query (e.g., using regex for partial matches)
       const regex = new RegExp(query, 'i'); // Case-insensitive regex
-      const users = await this.userModel.find({
-        $or: [
-          { firstname: { $regex: regex } },
-          { lastname: { $regex: regex } },
-          { email: { $regex: regex } },
-        ],
-      }).exec();
+      const users = await this.userModel
+        .find({
+          $or: [
+            { firstname: { $regex: regex } },
+            { lastname: { $regex: regex } },
+            { email: { $regex: regex } },
+          ],
+        })
+        .exec();
       return users;
     } catch (error) {
       console.error('Error searching users:', error);
