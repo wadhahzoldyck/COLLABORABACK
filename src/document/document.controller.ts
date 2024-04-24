@@ -32,8 +32,17 @@ export class DocumentController {
   async getUsersWithAccess(@Param('id') id: string): Promise<string[]> {
     return this.documentService.getUsersWithAccess(id);
   }
+
+
+  @Get('withoutFolder')
+  async findDocumentsWithoutFolder(): Promise<Document[]> {
+    return this.documentService.findDocumentsWithoutFolder();
+  }
+  
+
   // @Get(':id/access-usersdata')
   // async getUsersWithAccessname(@Param('id') id: string): Promise<UserDataDTO[]> {
   //   return this.documentService.getUsersWithAccessname(id);
   // }
+
 }

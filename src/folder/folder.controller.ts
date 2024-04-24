@@ -21,9 +21,9 @@ export class FolderController {
     return this.folderService.create(createFolderDto);
   }
 
-  @Get()
-  async findAll(): Promise<Folder[]> {
-    return this.folderService.findAll();
+  @Get(':id')
+  async findAll(@Param('id') idowner: string): Promise<Folder[]> {
+    return this.folderService.findAll(idowner);
   }
 
   @Get(':id')
