@@ -10,6 +10,9 @@ export class Content {
   name: string;
 
   @Prop()
-  attachmentUrl: string; // Store the URL or path to the uploaded file
+  attachmentUrl: string; 
+  
+  @Prop()
+  publicId:string
 }
 export const ContentSchema = SchemaFactory.createForClass(Content);

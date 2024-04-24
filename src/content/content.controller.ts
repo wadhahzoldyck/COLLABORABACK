@@ -104,60 +104,6 @@ export class ContentController {
     return content;
   }
 
-  @Post('createContent')
-  @ApiConsumes('multipart/form-data') // Specify that this endpoint consumes multipart/form-data
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Select file to upload',
-        },
-        text: {
-          type: 'string',
-        },
-      },
-    },
-  })
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          cb(null, `${file.originalname}`);
-        },
-      }),
-    }),
-  )
-  async createWithUpload(
-    @Body() contentData: any,
-    @UploadedFile() file: any,
-  ): Promise<Content> {
-    try {
-      // Handle file upload
-      let attachmentUrl: string;
-      if (file) {
-        attachmentUrl = file.path; // Assuming file.path contains the path to the uploaded file
-      }
-
-      // Create content
-      const createdContent = await this.contentService.create({
-        ...contentData,
-        attachmentUrl,
-      });
-
-      return createdContent;
-    } catch (error) {
-      console.error('Error creating content with file upload:', error);
-      throw new HttpException(
-        'Failed to create content with file upload',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Post('/file')
   @ApiConsumes('multipart/form-data') // Specify that this endpoint consumes multipart/form-data
   @ApiBody({
@@ -236,47 +182,49 @@ export class ContentController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, callback) => {       
+        filename: (req, file, callback) => {
           const filename = `${file.originalname}`;
-          console.log(filename)
+          console.log(filename);
           callback(null, filename);
         },
       }),
     }),
   )
-  async uploadFileOnCloud(@UploadedFile() file: Express.Multer.File,@Req() req: Request,
-  @Res() res: Response) {
+  async uploadFileOnCloud(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     const files = await this.contentService.uploadFile(file);
-    console.log(files)
-    return res.status(200).json({ data:files });;
+    console.log('files upload :', files);
+    return res.status(200).json({ data: files });
   }
 
   @Get('getFromCloud')
-  async getImages(@Req() req: Request,
-  @Res() res: Response){
-   const files = await this.contentService.fetchImages();
-   console.log("files: ",files)
-    res.status(200).json({data:files})
+  async getImages(@Req() req: Request, @Res() res: Response) {
+    const files = await this.contentService.fetchImages();
+    console.log('files: ', files);
+    res.status(200).json({ data: files });
   }
 
   @Delete(':id')
-  async deleteFile(@Param('id') fileId: string,@Req() req: Request,
-  @Res() res: Response) {
-
-      const result = await this.contentService.deleteFile(fileId);
-      console.log(fileId);
-       return res.status(200).json({ data:result });;
- 
+  async deleteFile(
+    @Param('id') fileId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const result = await this.contentService.deleteFile(fileId);
+    console.log(fileId);
+    return res.status(200).json({ data: result });
   }
 
   @Delete('deleteFile/:id')
-  async deleteFileFromCloud(@Param('id') fileId: string): Promise<void> {
+  async deleteFileFromCloud(@Param('id') id: string): Promise<void> {
     try {
-      // Use Cloudinary SDK or API to delete the file
-      await cloudinary.uploader.destroy(fileId);
-      // Handle successful deletion
+      console.log(id);
+      const deletedFile = await cloudinary.uploader.destroy(id);
+      console.log(deletedFile);
     } catch (error) {
-      // Handle deletion error
       throw new Error('Failed to delete file');
     }
   }
