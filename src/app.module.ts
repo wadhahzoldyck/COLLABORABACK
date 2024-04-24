@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { VersioningModule } from './versioning/versioning.module';
 import { VersionController } from './versioning/version.controller';
 import { FolderModule } from './folder/folder.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
@@ -30,11 +31,13 @@ import { FolderModule } from './folder/folder.module';
     AuthModule,
     VersioningModule,
     FolderModule,
-     ],
+    MulterModule.register({
+      dest: './uploads', // Destination directory for uploaded files
+    }),
+  ],
 
   controllers: [AppController],
 
   providers: [AppService],
-
 })
 export class AppModule {}
