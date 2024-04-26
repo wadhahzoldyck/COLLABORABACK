@@ -23,9 +23,7 @@ export class VersionController {
         throw new NotFoundException('Versioning document not found');
       }
 
-      // Find the specific version by its ID
-      // console.log(JSON.stringify(versioning.document));
-      // console.log('versionId',versionId);
+  
       const reversedDocument = [...versioning.document].reverse();
       const version = reversedDocument[versionId].data;
       console.log(version);
@@ -56,12 +54,12 @@ export class VersionController {
           data: document.data,
       });
   
-      // Add the new version document to the versioning document's 'document' array
+      
       versioning.document.push(versionDocument);
   
-      // Check if the document array length exceeds 30
+   
       if (versioning.document.length > 30) {
-          // Remove the first document in the array
+
           versioning.document.shift();
       }
   
@@ -138,4 +136,74 @@ export class VersionController {
       throw new NotFoundException('Version Number not found');
     }
   }
+  
+  @Get(':id/compare/:versionId1/:versionId2')
+  async compareVersions(
+    @Param('id') id: string,
+    @Param('versionId1') versionId1: string,
+    @Param('versionId2') versionId2: string
+  ) {
+    try {
+      // Find the versioning document by ID
+      const versioning = await this.versioningModel.findById(id).exec();
+      if (!versioning) {
+        throw new NotFoundException('Versioning document not found');
+      }
+  
+      // Get the data of the specified versions
+      const reversedDocument = [...versioning.document].reverse();
+      const versionData1 = reversedDocument[versionId1]?.data?.ops; // Access the 'ops' array
+      const versionData2 = reversedDocument[versionId2]?.data?.ops; // Access the 'ops' array
+  
+      // Check if both versions exist
+      if (!versionData1 || !versionData2) {
+        throw new NotFoundException('One or both versions not found');
+      }
+  
+      // Compare the data of the two versions using the compare function
+      const comparisonResult = this.compare(versionData1, versionData2);
+      console.log("hi",comparisonResult)
+  
+      return comparisonResult;
+    } catch (error) {
+      console.error('Error comparing versions:', error);
+      throw new InternalServerErrorException('Error comparing versions');
+    }
+  }
+  
+  private compare(versionData1: any[], versionData2: any[]): any[] {
+    const comparisonResult = [];
+  
+    // Determine the maximum length of the arrays
+    const maxLength = Math.max(versionData1.length, versionData2.length);
+  
+    // Iterate over the arrays of objects in each version's data
+    for (let i = 0; i < maxLength; i++) {
+      const insert1 = versionData1[i]?.insert || '';
+      const insert2 = versionData2[i]?.insert || '';
+      
+      // Compare the inserts in each array item
+      if (insert1 === insert2) {
+        // Inserts are identical, no difference
+        comparisonResult.push({ insert: insert1, difference: 'identical' });
+      } else {
+        // Inserts are different, highlight the differences
+        comparisonResult.push({ insert: insert1, difference: 'different' });
+  
+        // Compare the inserts and underline the different part
+        let underlineIndex = 0;
+        while (insert1[underlineIndex] === insert2[underlineIndex]) {
+          underlineIndex++;
+        }
+        const difference = `${insert2.substring(underlineIndex)}`;
+        comparisonResult.push({ insert: difference, difference: 'different' });
+      }
+    }
+  
+    console.log(comparisonResult);
+  
+    return comparisonResult;
+  }
+  
+  
 }
