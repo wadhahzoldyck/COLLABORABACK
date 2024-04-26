@@ -4,6 +4,7 @@ import { Schema as MongooseSchema } from 'mongoose';
 import { User } from '../../auth/schema/user.schema';
 import { Comment } from '../../comment/schema/comment.schema';
 import { Folder } from '../../folder/schema/folder.schema'; // Import the Folder schema
+import { Content } from '../../content/schema/content.schema';
 
 @Schema({
   timestamps: true,
@@ -11,17 +12,17 @@ import { Folder } from '../../folder/schema/folder.schema'; // Import the Folder
 export class Document {
   @Prop()
   _id: string;
-  
+
   @Prop()
   documentName: string;
 
   @Prop({ type: Object })
   data: Object;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' }) 
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
   owner: User;
 
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }] }) 
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }] })
   usersWithAccess: User[];
 
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Comment' }] })
@@ -29,6 +30,8 @@ export class Document {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Folder' }) // Reference to the Folder schema
   folder: Folder;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Content' }) // Reference to the Folder schema
+  content: Content;
 }
 
 export const DocumentSchema = SchemaFactory.createForClass(Document);
