@@ -10,6 +10,7 @@ import {
 import { DocumentService } from './document.service';
 import { Document } from './schema/document.schema';
 import { AddUserToDocumentDto } from './dto/document.dto';
+import { UserDataDTO } from '../auth/dto/userdata.dto';
 
 @Controller('document')
 export class DocumentController {
@@ -37,8 +38,17 @@ export class DocumentController {
     return this.documentService.getUsersWithAccess(id);
   }
 
+
   @Get('withoutFolder')
   async findDocumentsWithoutFolder(): Promise<Document[]> {
     return this.documentService.findDocumentsWithoutFolder();
   }
+
+  
+
+  // @Get(':id/access-usersdata')
+  // async getUsersWithAccessname(@Param('id') id: string): Promise<UserDataDTO[]> {
+  //   return this.documentService.getUsersWithAccessname(id);
+  // }
+
 }

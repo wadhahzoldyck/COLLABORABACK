@@ -1,5 +1,3 @@
-// user.schema.ts
-
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -16,6 +14,9 @@ export class User extends Document {
 
   @Prop()
   password: string;
+
+  @Prop({ type: Buffer }) // Store image data as a Buffer
+  profileImage: Buffer;
 
   @Prop()
   hashedRT: string;
