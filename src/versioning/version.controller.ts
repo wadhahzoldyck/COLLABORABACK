@@ -1,9 +1,10 @@
 // versioning.controller.ts
-import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, Body, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Document as DocumentModel } from '../document/schema/document.schema';
 import { Versioning } from './schema/versioning.schema';
+import { AddHistoryDto } from './dto/versioning.dto';
 
 @Controller('versioning')
 
@@ -204,6 +205,44 @@ export class VersionController {
   
     return comparisonResult;
   }
+
+  @Post(':id/history')
+  async addHistory(@Param('id') id: string, @Body() addHistoryDto: AddHistoryDto) {
+    try {
+      const versioning = await this.versioningModel.findById(id).exec();
+      if (!versioning) {
+        throw new NotFoundException('Versioning document not found');
+      }
+
+
+      versioning.history.push(addHistoryDto);
+      
+
+      const updatedVersioning = await versioning.save();
   
-  
+      return updatedVersioning;
+    } catch (error) {
+      console.error('Error adding history:', error);
+      throw new InternalServerErrorException('Error adding history');
+    }
+  }
+
+  @Get(':id/history')
+  async getHistoryList(@Param('id') id: string) {
+    try {
+      const versioning = await this.versioningModel.findById(id).exec();
+      if (!versioning) {
+        throw new NotFoundException('Versioning document not found');
+      }
+
+      // Return the history array
+      return versioning.history;
+    } catch (error) {
+      console.error('Error retrieving history:', error);
+      throw new InternalServerErrorException('Error retrieving history');
+    }
+  }
 }
+
+
+
