@@ -3,11 +3,15 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
+  Put,
   Query,
   Req,
   Res,
   UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -19,6 +23,11 @@ import { Token } from './types/schema/token.schema';
 import { Model } from 'mongoose';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { updateProfil } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/ChangePasswordDto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
+import { ApiConsumes } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -26,17 +35,31 @@ export class AuthController {
     private authService: AuthService,
     @InjectModel(Token.name) private readonly tokenModel: Model<Token>,
   ) {}
-
-  @Post('/signup')
-  signup(@Body() dto: UserDto): Promise<Tokens> {
+  @Post('signup')
+  async signup(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UserDto,
+  ): Promise<any> {
     if (dto.password !== dto.confirm_password) {
-      throw new BadRequestException('Password does not match');
+      throw new BadRequestException('Passwords do not match');
     }
-    return this.authService.signup(dto);
+
+    // Include file handling logic as necessary, for example, saving the file path to the database
+    if (file) {
+      dto.profileImage = file;
+    }
+
+    return this.authService.signup(dto, file);
   }
 
+  // @Post('/signup')
+  // signup(@Body() dto: UserDto): Promise<Tokens> {
+  //   if (dto.password !== dto.confirm_password) {
+  //     throw new BadRequestException('Password does not match');
+  //   }
+  //   return this.authService.signup(dto);
+  // }
   @Post('/signin')
-
   async signin(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -52,7 +75,6 @@ export class AuthController {
     console.log(tokens);
 
     return tokens;
-
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -78,8 +100,6 @@ export class AuthController {
     const accessToken = authorizationHeader.replace('Bearer ', '');
     return this.authService.Authuser(accessToken);
   }
-
-
 
   @Post('/refresh')
   refreshTokens(
@@ -121,14 +141,37 @@ export class AuthController {
   }
 
   @Get('search')
-  async searchUsers(@Query('q') query: string, @Query('documentId') documentId: string) {
+  async searchUsers(
+    @Query('q') query: string,
+    @Query('documentId') documentId: string,
+  ) {
     try {
-      const users = await this.authService.searchUsersNotInDocument(documentId, query);
+      const users = await this.authService.searchUsers(query, documentId);
       console.log(users);
       return users;
     } catch (error) {
       console.error('Error searching users:', error);
       throw new Error('Error searching users');
+    }
+  }
+
+  @Put('profile/:userId')
+  async updateProfile(
+    @Param('userId') userId: string,
+    @Body() dto: updateProfil,
+  ) {
+    return this.authService.updateProfile(userId, dto);
+  }
+
+  @Put('password/:userId')
+  async updatePassword(
+    @Param('userId') userId: string,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    try {
+      await this.authService.updatePassword(userId, dto);
+    } catch (error) {
+      throw error;
     }
   }
 }

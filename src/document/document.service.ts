@@ -1,42 +1,54 @@
 // document.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { Document, DocumentSchema } from './schema/document.schema'; // Ensure you're importing the Document and DocumentSchema from the correct file
 import { AddUserToDocumentDto } from './dto/document.dto';
+import { UserDataDTO } from '../auth/dto/userdata.dto';
+import { User } from '../auth/schema/user.schema';
+
+import { Folder } from '../folder/schema/folder.schema';
 
 @Injectable()
 export class DocumentService {
   constructor(
     @InjectModel(Document.name) private readonly documentModel: Model<Document>,
+    @InjectModel(User.name) private readonly userModel: Model<Document>,
+    @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
+
+
   ) {}
 
   async getDocumentById(id: string): Promise<Document> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
-      throw new NotFoundException(` with ID ${id} not found`);
+      throw new NotFoundException(`Document with ID ${id} not found`);
     }
     return document;
   }
 
-  async findByOwnerId(ownerId: string): Promise<Document[]> {
+  async findByFolderId(folderId: string): Promise<Document[]> {
     try {
-      const documents = await this.documentModel
-        .find({
-          $or: [
-            { owner: ownerId }, // Check if ownerId matches the owner field
-            { usersWithAccess: { $in: [ownerId] } }, // Check if ownerId exists in the usersWithAccess array
-          ],
-        })
-        .populate('owner');
-
+      // Find the folder document by its ID
+      const folder = await this.folderModel.findById(folderId).exec();
+  
+      // If folder not found, throw NotFoundException
+      if (!folder) {
+        throw new NotFoundException(`Folder with ID ${folderId} not found`);
+      }
+  
+      // Extract document IDs from the folder
+      const documentIds = folder.documents.map(doc => doc.toString());
+  
+      // Fetch documents based on the extracted IDs
+      const documents = await this.documentModel.find({ _id: { $in: documentIds } }).exec();
+  
       return documents;
     } catch (error) {
-      throw new NotFoundException(
-        `Documents with owner ID ${ownerId} not found`,
-      );
+      throw new NotFoundException(`Documents for folder with ID ${folderId} not found`);
     }
   }
+  
 
   async addUserToDocument(dto: AddUserToDocumentDto): Promise<Document> {
     console.log('hedhi dto');
@@ -61,4 +73,16 @@ export class DocumentService {
     }
     return document.usersWithAccess.map((user) => user._id.toString);
   }
+  async findDocumentsWithoutFolder(): Promise<Document[]> {
+    try {
+      const documentsWithoutFolder = await this.documentModel.find({ folder: null }).exec();
+      return documentsWithoutFolder;
+    } catch (error) {
+      throw new NotFoundException('Documents without folder not found');
+    }
+  }
+
+
+  
+   
 }

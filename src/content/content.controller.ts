@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -21,13 +22,18 @@ import * as fs from 'fs'; // Import the fs module
 import * as path from 'path';
 import { Content } from './schema/content.schema';
 import { v2 as cloudinary } from 'cloudinary';
+import { v4 as uuidv4 } from 'uuid';
 
-import { Request, Response } from 'express';
+import { Request, Response, query } from 'express';
+import { CloudinaryService } from '../../CloudinaryService';
 
 @ApiTags('Content Module')
 @Controller('content')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) {}
+  constructor(
+    private readonly contentService: ContentService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post()
   @ApiBody({
@@ -220,63 +226,47 @@ export class ContentController {
 
   @Post('uploadOnCloud')
   @ApiConsumes('multipart/form-data') // Specify that this endpoint consumes multipart/form-data
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Select file to upload',
-        },
-      },
-    },
-  })
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, callback) => {       
-          const filename = `${file.originalname}`;
-          console.log(filename)
-          callback(null, filename);
-        },
-      }),
-    }),
-  )
-  async uploadFileOnCloud(@UploadedFile() file: Express.Multer.File,@Req() req: Request,
-  @Res() res: Response) {
-    const files = await this.contentService.uploadFile(file);
-    console.log(files)
-    return res.status(200).json({ data:files });;
+  async uploadFileOnCloud(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('userId') userId: string, // Receive userId from the request body
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    console.log(2);
+    console.log(userId);
+    const files = await this.cloudinaryService.uploadFile(file, userId);
+    console.log(files);
+    return res.status(200).json({ data: files });
   }
 
   @Get('getFromCloud')
-  async getImages(@Req() req: Request,
-  @Res() res: Response){
-   const files = await this.contentService.fetchImages();
-   console.log("files: ",files)
-    res.status(200).json({data:files})
+  async getImages(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query('userId') userId: string,
+  ) {
+    console.log(userId);
+    const files = await this.cloudinaryService.fetchImagesCloudinary(userId);
+    res.status(200).json({ data: files });
   }
+
+  // @Delete(':id')
+  // async deleteFile(
+  //   @Param('id') fileId: string,
+  //   @Req() req: Request,
+  //   @Res() res: Response,
+  // ) {
+  //   const result = await this.contentService.deleteFile(fileId);
+  //   console.log(fileId);
+  //   return res.status(200).json({ data: result });
+  // }
 
   @Delete(':id')
-  async deleteFile(@Param('id') fileId: string,@Req() req: Request,
-  @Res() res: Response) {
-
-      const result = await this.contentService.deleteFile(fileId);
-      console.log(fileId);
-       return res.status(200).json({ data:result });;
- 
-  }
-
-  @Delete('deleteFile/:id')
-  async deleteFileFromCloud(@Param('id') fileId: string): Promise<void> {
+  async deleteFileFromCloud(@Param('id')id: string): Promise<void> {
     try {
-      // Use Cloudinary SDK or API to delete the file
-      await cloudinary.uploader.destroy(fileId);
-      // Handle successful deletion
+      console.log(id);
+      await cloudinary.uploader.destroy(id);
     } catch (error) {
-      // Handle deletion error
       throw new Error('Failed to delete file');
     }
   }

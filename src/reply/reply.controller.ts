@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
 import { ReplyService } from './reply.service';
 import { Reply } from './schema/reply.schema';
-import { CommentDocument } from 'src/comment/schema/comment.schema';
+import { CommentDocument } from '../comment/schema/comment.schema';
 
 @Controller('reply')
 export class ReplyController {

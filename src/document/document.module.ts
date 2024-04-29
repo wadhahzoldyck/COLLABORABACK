@@ -4,13 +4,20 @@ import { DocumentService } from './document.service';
 import { AppGateway } from './app.gateway';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DocumentSchema } from './schema/document.schema';
+import { UserSchema } from '../auth/schema/user.schema';
+
+import { FolderSchema } from '../folder/schema/folder.schema';
 
 
 @Module({
   controllers: [DocumentController],
-  imports:[    MongooseModule.forFeature([{ name: 'Document', schema: DocumentSchema }]),
+  imports:[    MongooseModule.forFeature([{ name: 'Document', schema: DocumentSchema },
+]),
+MongooseModule.forFeature([{ name: 'User', schema: UserSchema },
+]),
+MongooseModule.forFeature([{ name: 'Folder', schema: FolderSchema }]),
+  
 ],
   providers: [DocumentService,AppGateway],
-  exports:[DocumentService]
 })
 export class DocumentModule {}

@@ -1,18 +1,24 @@
 version: '3.8'
-
 services:
-  nestjs:
-    build: .
-    ports:
-      - "3000:3000"
+  db:
+    image: mongo:4.2
+    container_name: db
+    restart: always
     environment:
-      MONGO_URI: mongodb+srv://collaboradocs:collaboradocs@cluster2.a0uigsw.mongodb.net/?retryWrites=true&w=majority
-    depends_on:
-      - mongo
-
-  mongo:
-    image: mongo:latest
+      MONGO_INITDB_ROOT_USERNAME: collaboradocs
+      MONGO_INITDB_ROOT_PASSWORD: collaboradocs
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
-      - ./data:/data/db
+      - ./data/db:/dump # Corrected volume syntax
+  collaboradocs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ahmedbelhaj2/collaboradocdocker:1.0
+    restart: always
+    container_name: collaboradocdocker
+    ports:
+      - '3001:3001'
+    depends_on:
+      - db

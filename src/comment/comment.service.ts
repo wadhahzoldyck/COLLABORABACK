@@ -1,9 +1,10 @@
 // comment.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+
 import mongoose, { Model } from 'mongoose';
 import { Comment} from './schema/comment.schema';
-import { Reply } from 'src/reply/schema/reply.schema';
+import { Reply } from '../reply/schema/reply.schema';
 import { Document } from '../document/schema/document.schema'; // Importez le modèle Document depuis le bon chemin
 import { Types } from 'mongoose';
 import { User } from '../auth/schema/user.schema';
