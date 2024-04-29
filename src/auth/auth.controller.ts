@@ -37,7 +37,7 @@ export class AuthController {
   ) {}
 
   // @Post('/signup')
-  
+
   // async signup(
   //   @UploadedFile() file: Express.Multer.File,
   //   @Body() dto: UserDto,
@@ -150,9 +150,12 @@ export class AuthController {
   }
 
   @Get('search')
-  async searchUsers(@Query('q') query: string) {
+  async searchUsers(
+    @Query('q') query: string,
+    @Query('documentId') documentId: string,
+  ) {
     try {
-      const users = await this.authService.searchUsers(query);
+      const users = await this.authService.searchUsers(query,documentId);
       console.log(users);
       return users;
     } catch (error) {
