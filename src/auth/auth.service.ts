@@ -22,6 +22,7 @@ import { NotFoundError } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
 import { updateProfil } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/ChangePasswordDto';
+import { Document } from '../document/schema/document.schema';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +30,7 @@ export class AuthService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Token.name) private readonly tokenModel: Model<Token>,
     @InjectModel(Reset.name) private readonly resetModel: Model<Reset>,
+    @InjectModel(Document.name) private readonly documentModel: Model<Document>,
 
     private jwtService: JwtService,
     private mailerService: MailerService,
@@ -291,16 +293,30 @@ export class AuthService {
     );
   }
 
-  async searchUsers(query: string): Promise<User[]> {
+  async searchUsers(query: string, documentId: string): Promise<User[]> {
     try {
-      // Perform search based on query (e.g., using regex for partial matches)
+      // Retrieve the document with the specified documentId
+      const document = await this.documentModel.findById(documentId).exec();
+      if (!document) {
+        throw new Error('Document not found');
+      }
+
+      // Extract the IDs of usersWithAccess from the document
+      const existingUserIds = document.usersWithAccess.map((user) => user._id);
+
+      // Perform search based on query and exclude existingUserIds
       const regex = new RegExp(query, 'i'); // Case-insensitive regex
       const users = await this.userModel
         .find({
-          $or: [
-            { firstname: { $regex: regex } },
-            { lastname: { $regex: regex } },
-            { email: { $regex: regex } },
+          $and: [
+            {
+              $or: [
+                { firstname: { $regex: regex } },
+                { lastname: { $regex: regex } },
+                { email: { $regex: regex } },
+              ],
+            },
+            { _id: { $nin: existingUserIds } }, // Exclude users with IDs in existingUserIds array
           ],
         })
         .exec();
@@ -310,6 +326,7 @@ export class AuthService {
       throw new Error('Error searching users');
     }
   }
+
   async updateProfile(userId: string, dto: updateProfil): Promise<User> {
     try {
       const user = await this.userModel.findById(userId).exec();
