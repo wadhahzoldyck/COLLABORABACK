@@ -1,5 +1,4 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import { Multer } from 'multer';
 
 export class UserDto {
   @IsNotEmpty()
@@ -22,5 +21,8 @@ export class UserDto {
   @IsNotEmpty()
   @IsString()
   readonly confirm_password: string;
-  profileImage: Express.Multer.File;
+
+  // If you're receiving the file with the profile image, ensure that you are not using class-validator
+  // annotations here since this is not a simple string, and validation would be different.
+  profileImage?: Express.Multer.File;
 }

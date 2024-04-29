@@ -35,39 +35,30 @@ export class AuthController {
     private authService: AuthService,
     @InjectModel(Token.name) private readonly tokenModel: Model<Token>,
   ) {}
+  @Post('signup')
+  async signup(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UserDto,
+  ): Promise<any> {
+    if (dto.password !== dto.confirm_password) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    // Include file handling logic as necessary, for example, saving the file path to the database
+    if (file) {
+      dto.profileImage = file;
+    }
+
+    return this.authService.signup(dto, file);
+  }
 
   // @Post('/signup')
-  
-  // async signup(
-  //   @UploadedFile() file: Express.Multer.File,
-  //   @Body() dto: UserDto,
-  // ): Promise<Tokens> {
-  //   try {
-  //     if (!file) {
-  //       throw new BadRequestException('No file uploaded');
-  //     }
-  //     if (dto.password !== dto.confirm_password) {
-  //       throw new BadRequestException('Password does not match');
-  //     }
-
-  //     dto.profileImage = file;
-  //     console.log(dto.profileImage);
-  //     console.log(file);
-  //     console.log('test');
-
-  //     return await this.authService.signup(dto, file);
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message); // Handle any other errors
+  // signup(@Body() dto: UserDto): Promise<Tokens> {
+  //   if (dto.password !== dto.confirm_password) {
+  //     throw new BadRequestException('Password does not match');
   //   }
+  //   return this.authService.signup(dto);
   // }
-
-  @Post('/signup')
-  signup(@Body() dto: UserDto): Promise<Tokens> {
-    if (dto.password !== dto.confirm_password) {
-      throw new BadRequestException('Password does not match');
-    }
-    return this.authService.signup(dto);
-  }
   @Post('/signin')
   async signin(
     @Body() dto: LoginDto,
@@ -150,9 +141,12 @@ export class AuthController {
   }
 
   @Get('search')
-  async searchUsers(@Query('q') query: string) {
+  async searchUsers(
+    @Query('q') query: string,
+    @Query('documentId') documentId: string,
+  ) {
     try {
-      const users = await this.authService.searchUsers(query);
+      const users = await this.authService.searchUsers(query, documentId);
       console.log(users);
       return users;
     } catch (error) {

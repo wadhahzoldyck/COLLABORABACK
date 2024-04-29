@@ -22,6 +22,7 @@ import { NotFoundError } from 'rxjs';
 import { LoginDto } from './dto/login.dto';
 import { updateProfil } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/ChangePasswordDto';
+import { Document } from '../document/schema/document.schema';
 
 @Injectable()
 export class AuthService {
@@ -29,50 +30,51 @@ export class AuthService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Token.name) private readonly tokenModel: Model<Token>,
     @InjectModel(Reset.name) private readonly resetModel: Model<Reset>,
+    @InjectModel(Document.name) private readonly documentModel: Model<Document>,
 
     private jwtService: JwtService,
     private mailerService: MailerService,
   ) {}
 
-  // async signup(dto: UserDto, file: Express.Multer.File): Promise<Tokens> {
-  //   try {
-  //     const hash = await this.hashData(dto.password);
+  async signup(dto: UserDto, file: Express.Multer.File): Promise<Tokens> {
+    try {
+      const hash = await this.hashData(dto.password);
 
-  //     // Read the file data and convert it to a Buffer
-  //     const fileData = fs.readFileSync(file.path);
+      // Read the file data and convert it to a Buffer
+      const fileData = fs.readFileSync(file.path);
 
-  //     const newUser = await this.userModel.create({
-  //       firstname: dto.firstname,
-  //       lastname: dto.lastname,
-  //       email: dto.email,
-  //       password: hash,
-  //       profileImage: fileData, // Save the file data as binary in the database
-  //     });
+      const newUser = await this.userModel.create({
+        firstname: dto.firstname,
+        lastname: dto.lastname,
+        email: dto.email,
+        password: hash,
+        profileImage: fileData, // Save the file data as binary in the database
+      });
 
-  //     // Generate tokens for the new user
-  //     const tokens = await this.getTokens(newUser.id, newUser.email);
+      // Generate tokens for the new user
+      const tokens = await this.getTokens(newUser.id, newUser.email);
 
-  //     // Update refresh token hash in the database
-  //     await this.updateRtHash(newUser.id, tokens.refresh_token);
+      // Update refresh token hash in the database
+      await this.updateRtHash(newUser.id, tokens.refresh_token);
 
-  //     return tokens;
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message); // Handle any other errors
-  //   }
-  // }
-
-  async signup(dto: UserDto): Promise<Tokens> {
-    const hash = await this.hashData(dto.password);
-    const newUser = await this.userModel.create({
-      firstname: dto.firstname,
-      lastname: dto.lastname,
-      email: dto.email,
-      password: hash,
-    });
-    const tokens = await this.getTokens(newUser.id, newUser.email);
-    await this.updateRtHash(newUser.id, tokens.refresh_token);
-    return tokens;
+      return tokens;
+    } catch (error) {
+      throw new BadRequestException(error.message); // Handle any other errors
+    }
   }
+
+  // async signup(dto: UserDto): Promise<Tokens> {
+  //   const hash = await this.hashData(dto.password);
+  //   const newUser = await this.userModel.create({
+  //     firstname: dto.firstname,
+  //     lastname: dto.lastname,
+  //     email: dto.email,
+  //     password: hash,
+  //   });
+  //   const tokens = await this.getTokens(newUser.id, newUser.email);
+  //   await this.updateRtHash(newUser.id, tokens.refresh_token);
+  //   return tokens;
+  // }
   async signin(dto: LoginDto): Promise<Tokens> {
     const user = await this.userModel.findOne({ email: dto.email }).exec();
     if (!user) throw new ForbiddenException('Access denied');
@@ -291,25 +293,38 @@ export class AuthService {
     );
   }
 
-  async searchUsers(query: string): Promise<User[]> {
+  async searchUsers(query: string, documentId: string): Promise<User[]> {
     try {
-      // Perform search based on query (e.g., using regex for partial matches)
-      const regex = new RegExp(query, 'i'); // Case-insensitive regex
+      const document = await this.documentModel.findById(documentId).exec();
+      if (!document) {
+        throw new Error('Document not found');
+      }
+  
+      const existingUserIds = document.usersWithAccess.map((user) => user._id);
+  
+      const regex = new RegExp(query, 'i'); 
       const users = await this.userModel
         .find({
-          $or: [
-            { firstname: { $regex: regex } },
-            { lastname: { $regex: regex } },
-            { email: { $regex: regex } },
+          $and: [
+            {
+              $or: [
+                { firstname: { $regex: regex } },
+                { lastname: { $regex: regex } },
+                { email: { $regex: regex } },
+              ],
+            },
+            { _id: { $nin: existingUserIds } },
           ],
         })
-        .exec();
+        .lean().exec();
       return users;
     } catch (error) {
       console.error('Error searching users:', error);
       throw new Error('Error searching users');
     }
   }
+  
+
   async updateProfile(userId: string, dto: updateProfil): Promise<User> {
     try {
       const user = await this.userModel.findById(userId).exec();
