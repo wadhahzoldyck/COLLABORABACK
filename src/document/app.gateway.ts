@@ -71,13 +71,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ) {
-    const { documentId, docName, isAuth, idFolder } = data;
+    const { documentId, docName, parsedUserData, idFolder } = data;
     console.log('l isAth');
-    console.log(isAuth);
+    console.log(parsedUserData);
     const document = await this.findOrCreateDocument(
       documentId,
       docName,
-      isAuth,
+      parsedUserData,
       idFolder,
     );
 
@@ -86,7 +86,6 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.on('send-changes', (delta) => {
       client.to(documentId).emit('receive-changes', delta);
       client.on('save-document', async (data) => {
-        console.log('haha    ' + data);
         await this.documentModel.findByIdAndUpdate(documentId, { data });
       });
     });
@@ -98,9 +97,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: any,
   ): void {
     const { documentId } = data;
-    console.log('hedha l clien l connecta ', client.id);
     this.documentRooms.forEach((clients, documentId) => {
-      console.log(`mosh kima had doc: ${documentId}, Clients: ${clients.join(', ')}`);
     });
     // Emit the mouse-move event to all clients in the room except the sender
     client.to(documentId).emit('mouse-move', data);
@@ -111,7 +108,6 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() documentId: string,
   ): void {
-    console.log(`Client ${client.id} joining document ${documentId}`);
 
     // Join room corresponding to the document ID
     client.join(documentId);
@@ -140,7 +136,6 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     user: any,
     idFolder: string,
   ) {
-    console.log(idFolder);
     if (!id) return;
 
     try {

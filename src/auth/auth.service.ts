@@ -299,9 +299,9 @@ export class AuthService {
       if (!document) {
         throw new Error('Document not found');
       }
-
+  
       const existingUserIds = document.usersWithAccess.map((user) => user._id);
-
+  
       const regex = new RegExp(query, 'i'); 
       const users = await this.userModel
         .find({
@@ -316,13 +316,14 @@ export class AuthService {
             { _id: { $nin: existingUserIds } },
           ],
         })
-        .exec();
+        .lean().exec();
       return users;
     } catch (error) {
       console.error('Error searching users:', error);
       throw new Error('Error searching users');
     }
   }
+  
 
   async updateProfile(userId: string, dto: updateProfil): Promise<User> {
     try {
