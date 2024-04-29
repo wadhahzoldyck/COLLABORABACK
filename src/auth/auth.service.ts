@@ -36,45 +36,45 @@ export class AuthService {
     private mailerService: MailerService,
   ) {}
 
-  // async signup(dto: UserDto, file: Express.Multer.File): Promise<Tokens> {
-  //   try {
-  //     const hash = await this.hashData(dto.password);
+  async signup(dto: UserDto, file: Express.Multer.File): Promise<Tokens> {
+    try {
+      const hash = await this.hashData(dto.password);
 
-  //     // Read the file data and convert it to a Buffer
-  //     const fileData = fs.readFileSync(file.path);
+      // Read the file data and convert it to a Buffer
+      const fileData = fs.readFileSync(file.path);
 
-  //     const newUser = await this.userModel.create({
-  //       firstname: dto.firstname,
-  //       lastname: dto.lastname,
-  //       email: dto.email,
-  //       password: hash,
-  //       profileImage: fileData, // Save the file data as binary in the database
-  //     });
+      const newUser = await this.userModel.create({
+        firstname: dto.firstname,
+        lastname: dto.lastname,
+        email: dto.email,
+        password: hash,
+        profileImage: fileData, // Save the file data as binary in the database
+      });
 
-  //     // Generate tokens for the new user
-  //     const tokens = await this.getTokens(newUser.id, newUser.email);
+      // Generate tokens for the new user
+      const tokens = await this.getTokens(newUser.id, newUser.email);
 
-  //     // Update refresh token hash in the database
-  //     await this.updateRtHash(newUser.id, tokens.refresh_token);
+      // Update refresh token hash in the database
+      await this.updateRtHash(newUser.id, tokens.refresh_token);
 
-  //     return tokens;
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message); // Handle any other errors
-  //   }
-  // }
-
-  async signup(dto: UserDto): Promise<Tokens> {
-    const hash = await this.hashData(dto.password);
-    const newUser = await this.userModel.create({
-      firstname: dto.firstname,
-      lastname: dto.lastname,
-      email: dto.email,
-      password: hash,
-    });
-    const tokens = await this.getTokens(newUser.id, newUser.email);
-    await this.updateRtHash(newUser.id, tokens.refresh_token);
-    return tokens;
+      return tokens;
+    } catch (error) {
+      throw new BadRequestException(error.message); // Handle any other errors
+    }
   }
+
+  // async signup(dto: UserDto): Promise<Tokens> {
+  //   const hash = await this.hashData(dto.password);
+  //   const newUser = await this.userModel.create({
+  //     firstname: dto.firstname,
+  //     lastname: dto.lastname,
+  //     email: dto.email,
+  //     password: hash,
+  //   });
+  //   const tokens = await this.getTokens(newUser.id, newUser.email);
+  //   await this.updateRtHash(newUser.id, tokens.refresh_token);
+  //   return tokens;
+  // }
   async signin(dto: LoginDto): Promise<Tokens> {
     const user = await this.userModel.findOne({ email: dto.email }).exec();
     if (!user) throw new ForbiddenException('Access denied');
@@ -295,17 +295,14 @@ export class AuthService {
 
   async searchUsers(query: string, documentId: string): Promise<User[]> {
     try {
-      // Retrieve the document with the specified documentId
       const document = await this.documentModel.findById(documentId).exec();
       if (!document) {
         throw new Error('Document not found');
       }
 
-      // Extract the IDs of usersWithAccess from the document
       const existingUserIds = document.usersWithAccess.map((user) => user._id);
 
-      // Perform search based on query and exclude existingUserIds
-      const regex = new RegExp(query, 'i'); // Case-insensitive regex
+      const regex = new RegExp(query, 'i'); 
       const users = await this.userModel
         .find({
           $and: [
@@ -316,7 +313,7 @@ export class AuthService {
                 { email: { $regex: regex } },
               ],
             },
-            { _id: { $nin: existingUserIds } }, // Exclude users with IDs in existingUserIds array
+            { _id: { $nin: existingUserIds } },
           ],
         })
         .exec();
