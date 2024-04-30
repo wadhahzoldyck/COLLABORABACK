@@ -1,5 +1,6 @@
 // document.controller.ts
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -28,27 +29,38 @@ export class DocumentController {
     return documents;
   }
 
+  @Get('user/:userId')
+  async getAllDocumentsForUser(
+    @Param('userId') userId: string,
+  ): Promise<Document[]> {
+    return this.documentService.getDocumentsForUser(userId);
+  }
   @Post('add-user')
   async addUserToDocument(@Body() dto: AddUserToDocumentDto) {
-    return await this.documentService.addUserToDocument(dto);
+    const { documentId, userId, accessLevel } = dto;
+    if (accessLevel !== 'readOnly' && accessLevel !== 'readWrite') {
+      throw new BadRequestException('Invalid access level specified.');
+    }
+    return await this.documentService.addUserToDocument(
+      { documentId, userId, accessLevel },
+      accessLevel,
+    );
   }
 
   @Get(':id/access-users')
-  async getUsersWithAccess(@Param('id') id: string): Promise<string[]> {
+  async getUsersWithAccess(
+    @Param('id') id: string,
+  ): Promise<{ userId: string; accessLevel: string }[]> {
     return this.documentService.getUsersWithAccess(id);
   }
-
 
   @Get('withoutFolder')
   async findDocumentsWithoutFolder(): Promise<Document[]> {
     return this.documentService.findDocumentsWithoutFolder();
   }
 
-  
-
   // @Get(':id/access-usersdata')
   // async getUsersWithAccessname(@Param('id') id: string): Promise<UserDataDTO[]> {
   //   return this.documentService.getUsersWithAccessname(id);
   // }
-
 }

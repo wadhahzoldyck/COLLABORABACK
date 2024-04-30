@@ -13,10 +13,8 @@ import { Folder } from '../folder/schema/folder.schema';
 export class DocumentService {
   constructor(
     @InjectModel(Document.name) private readonly documentModel: Model<Document>,
-    @InjectModel(User.name) private readonly userModel: Model<Document>,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
-
-
   ) {}
 
   async getDocumentById(id: string): Promise<Document> {
@@ -31,58 +29,120 @@ export class DocumentService {
     try {
       // Find the folder document by its ID
       const folder = await this.folderModel.findById(folderId).exec();
-  
+
       // If folder not found, throw NotFoundException
       if (!folder) {
         throw new NotFoundException(`Folder with ID ${folderId} not found`);
       }
-  
+
       // Extract document IDs from the folder
-      const documentIds = folder.documents.map(doc => doc.toString());
-  
+      const documentIds = folder.documents.map((doc) => doc.toString());
+
       // Fetch documents based on the extracted IDs
-      const documents = await this.documentModel.find({ _id: { $in: documentIds } }).exec();
-  
+      const documents = await this.documentModel
+        .find({ _id: { $in: documentIds } })
+        .exec();
+
       return documents;
     } catch (error) {
-      throw new NotFoundException(`Documents for folder with ID ${folderId} not found`);
+      throw new NotFoundException(
+        `Documents for folder with ID ${folderId} not found`,
+      );
     }
   }
-  
 
-  async addUserToDocument(dto: AddUserToDocumentDto): Promise<Document> {
-    console.log('hedhi dto');
-    console.log(dto);
+  async addUserToDocument(
+      dto: AddUserToDocumentDto,
+    accessLevel: 'readOnly' | 'readWrite',
+  ): Promise<Document> {
     const { documentId, userId } = dto;
-    return await this.documentModel
-      .findByIdAndUpdate(
-        documentId,
-        { $push: { usersWithAccess: userId } },
-        { new: true },
-      )
-      .exec();
+
+    // First, check if the user already exists in the document's access list
+    const document = await this.documentModel.findById(documentId);
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${documentId} not found`);
+    }
+
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`Document with ID ${userId} not found`);
+    }
+
+    const userAccessIndex = document.usersWithAccess.findIndex(
+      (access) => access.user.toString() === userId,
+    );
+
+    // If user is already in the list, update their access level, otherwise add them
+    if (userAccessIndex > -1) {
+      document.usersWithAccess[userAccessIndex].accessLevel = accessLevel;
+    } else {
+      document.usersWithAccess.push({ user: user, accessLevel: accessLevel });
+    }
+
+    return document.save();
   }
 
-  async getUsersWithAccess(documentId: string): Promise<string[]> {
+  async getUsersWithAccess(
+    documentId: string,
+  ): Promise<{ userId: string; accessLevel: string }[]> {
     const document = await this.documentModel
       .findById(documentId)
-      .select('usersWithAccess')
+      .populate('usersWithAccess.user')
       .exec();
+
     if (!document) {
       throw new NotFoundException('Document not found');
     }
-    return document.usersWithAccess.map((user) => user._id.toString);
+
+    return document.usersWithAccess.map((access) => ({
+      userId: access.user._id.toString(),
+      accessLevel: access.accessLevel,
+    }));
   }
+
   async findDocumentsWithoutFolder(): Promise<Document[]> {
     try {
-      const documentsWithoutFolder = await this.documentModel.find({ folder: null }).exec();
+      const documentsWithoutFolder = await this.documentModel
+        .find({ folder: null })
+        .exec();
       return documentsWithoutFolder;
     } catch (error) {
       throw new NotFoundException('Documents without folder not found');
     }
   }
 
+  async updateDocument(
+    documentId: string,
+    updateDto: any,
+    userId: string,
+  ): Promise<Document> {
+    const document = await this.documentModel.findById(documentId);
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${documentId} not found`);
+    }
 
-  
-   
+    // Check if user has readWrite access
+    const hasReadWriteAccess = document.usersWithAccess.some(
+      (access) =>
+        access.user.toString() === userId && access.accessLevel === 'readWrite',
+    );
+
+    if (!hasReadWriteAccess) {
+      throw new Error(
+        'Access Denied: User does not have readWrite permissions',
+      );
+    }
+
+    Object.assign(document, updateDto);
+    return document.save();
+  }
+
+  async getDocumentsForUser(userId: string): Promise<Document[]> {
+    return this.documentModel.find({
+      $or: [
+        { owner: userId },
+        { 'usersWithAccess.user': userId }
+      ]
+    }).exec();
+  }
 }
