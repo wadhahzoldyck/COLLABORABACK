@@ -13,6 +13,7 @@ import { Model } from 'mongoose';
 import { Server, Socket } from 'socket.io';
 import { Document } from './schema/document.schema';
 import { Folder } from '../folder/schema/folder.schema';
+import { User } from '../auth/schema/user.schema';
 
 const defaultValue = '';
 @WebSocketGateway({
@@ -71,13 +72,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ) {
-    const { documentId, docName, parsedUserData, idFolder } = data;
+    const { documentId, docName, isAuth, idFolder } = data;
     console.log('l isAth');
-    console.log(parsedUserData);
+    console.log(isAuth);
     const document = await this.findOrCreateDocument(
       documentId,
       docName,
-      parsedUserData,
+      isAuth,
       idFolder,
     );
 
@@ -97,8 +98,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: any,
   ): void {
     const { documentId } = data;
-    this.documentRooms.forEach((clients, documentId) => {
-    });
+    this.documentRooms.forEach((clients, documentId) => {});
     // Emit the mouse-move event to all clients in the room except the sender
     client.to(documentId).emit('mouse-move', data);
   }
@@ -108,7 +108,6 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() documentId: string,
   ): void {
-
     // Join room corresponding to the document ID
     client.join(documentId);
 
