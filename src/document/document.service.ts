@@ -1,4 +1,3 @@
-// document.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
@@ -52,7 +51,7 @@ export class DocumentService {
   }
 
   async addUserToDocument(
-      dto: AddUserToDocumentDto,
+    dto: AddUserToDocumentDto,
     accessLevel: 'readOnly' | 'readWrite',
   ): Promise<Document> {
     const { documentId, userId } = dto;
@@ -80,6 +79,31 @@ export class DocumentService {
     }
 
     return document.save();
+  }
+
+  async removeUserFromDocument(
+    documentId: string,
+    userId: string,
+  ): Promise<Document> {
+    const document = await this.documentModel.findById(documentId).exec();
+
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${documentId} not found`);
+    }
+
+    const userIndex = document.usersWithAccess.findIndex(
+      (access) => access.user.toString() === userId,
+    );
+
+    if (userIndex > -1) {
+      document.usersWithAccess.splice(userIndex, 1);
+      await document.save();
+      return document;
+    } else {
+      throw new NotFoundException(
+        `User with ID ${userId} not found in document`,
+      );
+    }
   }
 
   async getUsersWithAccess(
@@ -121,7 +145,6 @@ export class DocumentService {
       throw new NotFoundException(`Document with ID ${documentId} not found`);
     }
 
-    // Check if user has readWrite access
     const hasReadWriteAccess = document.usersWithAccess.some(
       (access) =>
         access.user.toString() === userId && access.accessLevel === 'readWrite',
@@ -138,11 +161,34 @@ export class DocumentService {
   }
 
   async getDocumentsForUser(userId: string): Promise<Document[]> {
-    return this.documentModel.find({
-      $or: [
-        { owner: userId },
-        { 'usersWithAccess.user': userId }
-      ]
-    }).exec();
+    return this.documentModel
+      .find({
+        $or: [{ owner: userId }, { 'usersWithAccess.user': userId }],
+      })
+      .populate('owner')
+      .populate({
+        path: 'usersWithAccess.user',
+        model: 'User', 
+      })
+      .lean()
+      .exec();
+  }
+
+  async updateAccess(idDoc: string, idUser: string, newAccessLevel: 'readOnly' | 'readWrite') {
+    const document = await this.documentModel.findById(idDoc).populate('usersWithAccess.user');
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${idDoc} not found`);
+    }
+
+    const userIndex = document.usersWithAccess.findIndex(access => access.user._id.toString() === idUser);
+
+    if (userIndex !== -1) {
+      document.usersWithAccess[userIndex].accessLevel = newAccessLevel;
+    } else {
+      throw new NotFoundException(`User with ID ${idUser} not found in document`);
+    }
+
+    await document.save();  
+    return document;  
   }
 }

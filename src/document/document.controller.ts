@@ -3,9 +3,11 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { DocumentService } from './document.service';
@@ -47,6 +49,18 @@ export class DocumentController {
     );
   }
 
+  @Delete(':documentId/users/:userId')
+  async removeUserFromDocument(@Param('documentId') documentId: string, @Param('userId') userId: string): Promise<void> {
+    try {
+      await this.documentService.removeUserFromDocument(documentId, userId);
+    } catch (error) {
+      if (error.status === 404) {
+        throw new NotFoundException(error.response);
+      }
+      throw error;
+    }
+  }
+
   @Get(':id/access-users')
   async getUsersWithAccess(
     @Param('id') id: string,
@@ -57,6 +71,28 @@ export class DocumentController {
   @Get('withoutFolder')
   async findDocumentsWithoutFolder(): Promise<Document[]> {
     return this.documentService.findDocumentsWithoutFolder();
+  }
+
+  
+  @Patch(':idDoc/users/:idUser/access')
+  async updateDocumentAccess(
+    @Param('idDoc') idDoc: string,
+    @Param('idUser') idUser: string,
+    @Body('accessLevel') accessLevel: 'readOnly' | 'readWrite'
+  ) {
+    if (!['readOnly', 'readWrite'].includes(accessLevel)) {
+      throw new BadRequestException('Invalid access level. Valid values are "readOnly" or "readWrite".');
+    }
+    
+    try {
+      const updatedDocument = await this.documentService.updateAccess(idDoc, idUser, accessLevel);
+      return {
+        message: 'Access level updated successfully',
+        data: updatedDocument
+      };
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
 
   // @Get(':id/access-usersdata')
