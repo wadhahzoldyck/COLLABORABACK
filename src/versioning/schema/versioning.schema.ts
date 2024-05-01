@@ -11,6 +11,9 @@ export class Versioning {
 
   @Prop({ type: [Document] }) // Define document as an array of Document
   document: Document[];
+
+  @Prop([{ username: String, date: { type: Date, default: Date.now } }])
+  history: { username: string; date: Date }[];
 }
 
 export const VersioningSchema = SchemaFactory.createForClass(Versioning);
