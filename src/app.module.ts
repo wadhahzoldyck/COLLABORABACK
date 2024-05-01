@@ -15,6 +15,7 @@ import { VersioningModule } from './versioning/versioning.module';
 import { VersionController } from './versioning/version.controller';
 import { FolderModule } from './folder/folder.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { WorkspaceModule } from './workspace/workspace.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MulterModule } from '@nestjs/platform-express';
     MulterModule.register({
       dest: './uploads', // Destination directory for uploaded files
     }),
+    WorkspaceModule,
   ],
 
   controllers: [AppController],

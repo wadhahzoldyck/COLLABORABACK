@@ -1,9 +1,15 @@
 // versioning.controller.ts
-import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, Body, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Document as DocumentModel } from '../document/schema/document.schema';
 import { Versioning } from './schema/versioning.schema';
+import { AddHistoryDto } from './dto/versioning.dto';
+
+
+interface Inserts {
+  ops: { insert: string }[]; // Define the structure of 'ops' array
+}
 
 @Controller('versioning')
 
@@ -11,6 +17,7 @@ export class VersionController {
   constructor(
     @InjectModel(Versioning.name) private readonly versioningModel: Model<Versioning>,
     @InjectModel(DocumentModel.name) private readonly documentModel: Model<DocumentModel>,
+
   ) {}
 
 
@@ -40,7 +47,7 @@ export class VersionController {
 
   @Post(':id')
   async saveDocumentVersion(@Param('id') id: string) {
-      const document = await this.documentModel.findById(id).exec();
+      const document = await this.documentModel.findById(id).populate('owner').exec();
       if (!document) {
           throw new NotFoundException('Document not found');
       }
@@ -51,7 +58,9 @@ export class VersionController {
       }
   
       const versionDocument = new this.documentModel({
+        owner:document.owner,
           data: document.data,
+          documentName: document.documentName,
       });
   
       
@@ -204,6 +213,84 @@ export class VersionController {
   
     return comparisonResult;
   }
+
+  @Post(':id/history')
+  async addHistory(@Param('id') id: string, @Body() addHistoryDto: AddHistoryDto) {
+    try {
+      const versioning = await this.versioningModel.findById(id).exec();
+      if (!versioning) {
+        throw new NotFoundException('Versioning document not found');
+      }
+
+
+      versioning.history.push(addHistoryDto);
+      
+
+      const updatedVersioning = await versioning.save();
   
-  
+      return updatedVersioning;
+    } catch (error) {
+      console.error('Error adding history:', error);
+      throw new InternalServerErrorException('Error adding history');
+    }
+  }
+
+  @Get(':id/history')
+  async getHistoryList(@Param('id') id: string) {
+    try {
+      const versioning = await this.versioningModel.findById(id).exec();
+      if (!versioning) {
+        throw new NotFoundException('Versioning document not found');
+      }
+
+      // Return the history array
+      return versioning.history;
+    } catch (error) {
+      console.error('Error retrieving history:', error);
+      throw new InternalServerErrorException('Error retrieving history');
+    }
+  }
+
+
+
+
+
+  @Get(':id/text')
+  async getText(@Param('id') id: string): Promise<any> {
+    try {
+
+      const doc = await this.documentModel.findById(id).exec();
+      let TransformersApi  = Function('return import("@xenova/transformers")')();
+   
+      const insets: any = doc.data;
+
+      // Log the insets to see its structure
+      console.log("Insets:", insets);
+
+      // Access the 'ops' array if it exists
+      const ops = insets.ops || [];
+
+      let concatenatedText = '';
+      for (const op of ops) {
+        concatenatedText += op.insert;
+      }
+      console.log(concatenatedText);
+      const { pipeline, env } = await TransformersApi;
+      env.allowRemoteModels = false;
+      env.localModelPath = 'C:/Users/haithem/Desktop/node/COLLABORABACK/node_modules/@xenova/transformers/src/models.js/Xenova/distilbart-cnn-6-6';
+      const pipe = await pipeline("summarization","Xenova/distilbart-cnn-6-6");
+
+
+      const result = await pipe(concatenatedText,{max_length: 30}); 
+      console.log("result",result);
+      console.log("fama summary")
+      return result;
+    } catch (error) {
+      console.error("Error in getText:", error);
+      throw error; // Handle the error appropriately
+    }
+  }
 }
+
+
+
