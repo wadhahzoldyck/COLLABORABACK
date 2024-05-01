@@ -280,6 +280,7 @@ export class VersionController {
 
 
       const result = await pipe(concatenatedText,{max_length: 30}); 
+      result[1]=doc.documentName;
       console.log("result",result);
       console.log("fama summary")
       return result;
