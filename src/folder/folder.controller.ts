@@ -55,4 +55,15 @@ export class FolderController {
       throw new NotFoundException(error.message);
     }
   }
+
+  @Put(':folderId/moveDocuments')
+  async moveDocumentsToFolder(@Param('folderId') folderId: string, @Body() body: { documentIds: string[] }) {
+    const { documentIds } = body;
+    try {
+      const folder = await this.folderService.moveDocumentsToFolder(folderId, documentIds);
+      return folder;
+    } catch (error) {
+      throw new NotFoundException('Error moving documents to folder');
+    }
+  }
 }
