@@ -47,7 +47,7 @@ export class VersionController {
 
   @Post(':id')
   async saveDocumentVersion(@Param('id') id: string) {
-      const document = await this.documentModel.findById(id).exec();
+      const document = await this.documentModel.findById(id).populate('owner').exec();
       if (!document) {
           throw new NotFoundException('Document not found');
       }
@@ -58,7 +58,9 @@ export class VersionController {
       }
   
       const versionDocument = new this.documentModel({
+        owner:document.owner,
           data: document.data,
+          documentName: document.documentName,
       });
   
       
