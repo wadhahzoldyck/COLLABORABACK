@@ -310,6 +310,9 @@ export class VersionController {
       let TransformersApi  = Function('return import("@xenova/transformers")')();
    
       const insets: any = doc.data;
+      if (!insets) {
+        throw new NotFoundException('data document not found');
+      }
 
       // Log the insets to see its structure
       console.log("Insets:", insets);
@@ -353,27 +356,32 @@ export class VersionController {
       let TransformersApi = Function('return import("@xenova/transformers")')();
 
       const insets: any = doc.data;
+      if (!insets) {
+        throw new NotFoundException('data document not found');
+      }
 
       // Access the 'ops' array if it exists
       const ops = insets.ops || [];
+      
 
       let image = '';
       for (const op of ops) {
         image += op.insert.image;
       }
-
+     
       console.log("Image:", image);
 
       // Transform the image to text
       const { pipeline } = await TransformersApi;
-      const pipe = await pipeline('image-to-text', image);
+      const pipe = await pipeline('image-to-text');
+
       console.log("Text from image:", pipe);
 
-      // Convert image to JPG using sharp
-      const jpgBuffer = await sharp(Buffer.from(image, 'base64')).toFormat('jpeg').toBuffer();
-
-      const result = await pipe(image);
-
+      // // Convert image to JPG using sharp
+      // const jpgBuffer = await sharp(Buffer.from(image, 'base64')).toFormat('jpeg').toBuffer();
+      const base64ImageData = image.toString;
+      const result = await pipe(base64ImageData);
+      console.log("result hathy heya", result);
       // Send the JPG image as response
       return result;
     } catch (error) {
