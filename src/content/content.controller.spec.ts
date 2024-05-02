@@ -12,6 +12,7 @@ describe('ContentController', () => {
       controllers: [ContentController],
       providers: [
         ContentService,
+        CloudinaryService,
         { provide: 'ContentModel', useValue: ContentSchema },
       ],
     }).compile();
