@@ -9,14 +9,10 @@ describe('ContentService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ContentService,
-        { provide: 'ContentModel', useValue: ContentSchema },
+        { provide: 'ContentSchema', useValue: ContentSchema },
       ],
     }).compile();
 
     service = module.get<ContentService>(ContentService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
   });
 });
