@@ -9,7 +9,7 @@ describe('ContentService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ContentService,
-        { provide: 'ContentSchema', useValue: ContentSchema },
+        { provide: 'ContentModel', useValue: ContentSchema },
       ],
     }).compile();
 

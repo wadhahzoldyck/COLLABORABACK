@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
 import { ContentSchema } from './schema/content.schema'; // Import the Content and ContentSchema
+import { CloudinaryService } from '../../CloudinaryService';
 
 describe('ContentController', () => {
   let controller: ContentController;
@@ -11,14 +12,12 @@ describe('ContentController', () => {
       controllers: [ContentController],
       providers: [
         ContentService,
-        // Provide ContentModel as part of the testing module
-        { provide: 'ContentModel', useValue: ContentSchema },
+        CloudinaryService, // Provide CloudinaryService
       ],
     }).compile();
 
     controller = module.get<ContentController>(ContentController);
   });
-
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });

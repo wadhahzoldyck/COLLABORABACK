@@ -3,6 +3,7 @@ import { WorkspaceController } from './workspace.controller';
 import { WorkspaceService } from './workspace.service';
 import { WorkspaceSchema } from './schema/workspace.schema';
 import { UserSchema } from '../auth/schema/user.schema';
+import { DocumentSchema } from '../document/schema/document.schema';
 
 describe('WorkspaceController', () => {
   let controller: WorkspaceController;
@@ -13,7 +14,8 @@ describe('WorkspaceController', () => {
       providers: [
         WorkspaceService,
         { provide: 'WorkspaceModel', useValue: WorkspaceSchema },
-        { provide: 'UserModel', useValue: UserSchema}, // Provide UserModel
+        { provide: 'UserModel', useValue: UserSchema},
+        { provide: 'DocumentModel', useValue: DocumentSchema }, // Provide DocumentSchema
       ],
     }).compile();
 
