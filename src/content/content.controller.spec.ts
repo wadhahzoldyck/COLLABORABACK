@@ -12,12 +12,13 @@ describe('ContentController', () => {
       controllers: [ContentController],
       providers: [
         ContentService,
-        CloudinaryService, // Provide CloudinaryService
+        { provide: 'ContentModel', useValue: ContentSchema },
       ],
     }).compile();
 
     controller = module.get<ContentController>(ContentController);
   });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
