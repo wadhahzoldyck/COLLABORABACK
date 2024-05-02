@@ -11,12 +11,14 @@ describe('ContentController', () => {
       controllers: [ContentController],
       providers: [
         ContentService,
-        { provide: 'CommentModel', useValue: ContentSchema },
+        // Provide ContentModel as part of the testing module
+        { provide: 'ContentModel', useValue: ContentSchema },
       ],
     }).compile();
 
     controller = module.get<ContentController>(ContentController);
   });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
