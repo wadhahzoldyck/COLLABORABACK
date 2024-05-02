@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspaceController } from './workspace.controller';
 import { WorkspaceService } from './workspace.service';
 import { WorkspaceSchema } from './schema/workspace.schema';
+import { UserSchema } from '../auth/schema/user.schema';
 
 describe('WorkspaceController', () => {
   let controller: WorkspaceController;
@@ -12,6 +13,7 @@ describe('WorkspaceController', () => {
       providers: [
         WorkspaceService,
         { provide: 'WorkspaceModel', useValue: WorkspaceSchema },
+        { provide: 'UserModel', useValue: UserSchema}, // Provide UserModel
       ],
     }).compile();
 
