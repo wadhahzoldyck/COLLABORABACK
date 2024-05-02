@@ -1,10 +1,11 @@
 // versioning.controller.ts
-import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, Body, } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, Body, Res, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Document as DocumentModel } from '../document/schema/document.schema';
 import { Versioning } from './schema/versioning.schema';
 import { AddHistoryDto } from './dto/versioning.dto';
+import sharp from 'sharp';
 
 
 interface Inserts {
@@ -56,12 +57,15 @@ export class VersionController {
       if (!versioning) {
           versioning = await this.versioningModel.create({ _id: id, document: [] });
       }
+      console.log(document)
   
       const versionDocument = new this.documentModel({
         owner:document.owner,
           data: document.data,
           documentName: document.documentName,
       });
+      console.log(document.owner);
+      console.log(document.documentName);
   
       
       versioning.document.push(versionDocument);
@@ -252,9 +256,6 @@ export class VersionController {
   }
 
 
-
-
-
   @Get(':id/text')
   async getText(@Param('id') id: string): Promise<any> {
     try {
@@ -263,6 +264,9 @@ export class VersionController {
       let TransformersApi  = Function('return import("@xenova/transformers")')();
    
       const insets: any = doc.data;
+      if (!insets) {
+        throw new NotFoundException('Versioning document not found');
+      }
 
       // Log the insets to see its structure
       console.log("Insets:", insets);
@@ -282,6 +286,7 @@ export class VersionController {
 
 
       const result = await pipe(concatenatedText,{max_length: 30}); 
+      result[1]=doc.documentName;
       console.log("result",result);
       console.log("fama summary")
       return result;
@@ -290,7 +295,91 @@ export class VersionController {
       throw error; // Handle the error appropriately
     }
   }
-}
 
+
+
+
+
+
+
+  @Get(':id/traslate')
+  async getTranslation(@Param('id') id: string): Promise<any> {
+    try {
+
+      const doc = await this.documentModel.findById(id).exec();
+      let TransformersApi  = Function('return import("@xenova/transformers")')();
+   
+      const insets: any = doc.data;
+
+      // Log the insets to see its structure
+      console.log("Insets:", insets);
+
+      // Access the 'ops' array if it exists
+      const ops = insets.ops || [];
+
+      let concatenatedText = '';
+      for (const op of ops) {
+        concatenatedText += op.insert;
+      }
+      console.log(concatenatedText);
+      const { pipeline, env } = await TransformersApi;
+    
+      let pipe = await pipeline('translation');
+
+      const result = await pipe(concatenatedText,{
+        src_lang: 'eng_Latn',
+        tgt_lang: 'ell_Grek'
+        });
+      console.log("result",result);
+      console.log("fama traslate")
+      return result;
+    } catch (error) {
+      console.error("Error in getText:", error);
+      throw error; // Handle the error appropriately
+    }
+  }
+
+
+
+
+
+
+
+
+  @Get(':id/image')
+  async getImageToText(@Param('id') id: string): Promise<any> {
+    try {
+      const doc = await this.documentModel.findById(id).exec();
+      let TransformersApi = Function('return import("@xenova/transformers")')();
+
+      const insets: any = doc.data;
+
+      // Access the 'ops' array if it exists
+      const ops = insets.ops || [];
+
+      let image = '';
+      for (const op of ops) {
+        image += op.insert.image;
+      }
+
+      console.log("Image:", image);
+
+      // Transform the image to text
+      const { pipeline } = await TransformersApi;
+      const pipe = await pipeline('image-to-text', image);
+      console.log("Text from image:", pipe);
+
+      // Convert image to JPG using sharp
+      const jpgBuffer = await sharp(Buffer.from(image, 'base64')).toFormat('jpeg').toBuffer();
+
+      const result = await pipe(image);
+
+      // Send the JPG image as response
+      return result;
+    } catch (error) {
+      console.error("Error in getImageToText:", error);
+    }
+  }
+}
 
 
