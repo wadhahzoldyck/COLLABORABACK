@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
-import {ContentSchema } from './schema/content.schema'; // Import the Content and ContentSchema
+import { ContentSchema } from './schema/content.schema'; // Import the Content and ContentSchema
+import { CloudinaryService } from '../../CloudinaryService';
 
 describe('ContentController', () => {
   let controller: ContentController;
@@ -9,7 +10,11 @@ describe('ContentController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ContentController],
-      providers: [ContentService, { provide: 'ContentModel', useFactory: () => ContentSchema }],
+      providers: [
+        ContentService,
+        CloudinaryService,
+        { provide: 'ContentModel', useValue: ContentSchema },
+      ],
     }).compile();
 
     controller = module.get<ContentController>(ContentController);

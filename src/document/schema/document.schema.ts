@@ -5,7 +5,7 @@ import { User } from '../../auth/schema/user.schema';
 import { Comment } from '../../comment/schema/comment.schema';
 import { Folder } from '../../folder/schema/folder.schema';
 import { Content } from '../../content/schema/content.schema';
-import { Access, AccessSchema } from './access.schema'; // Import Access schema
+import { Access, AccessSchema } from './Access.schema'; // Import Access schema
 
 @Schema({
   timestamps: true,
