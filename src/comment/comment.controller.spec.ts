@@ -9,12 +9,14 @@ describe('CommentController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CommentController],
-      providers: [CommentService, { provide: 'CommentModel', useValue: CommentSchema }], // Provide the CommentService and CommentModel
+      providers: [
+        CommentService,
+        { provide: 'CommentModel', useValue: CommentSchema },
+      ],
     }).compile();
 
     controller = module.get<CommentController>(CommentController);
   });
-
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
