@@ -15,4 +15,7 @@ describe('WorkspaceService', () => {
 
     service = module.get<WorkspaceService>(WorkspaceService);
   });
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
 });
