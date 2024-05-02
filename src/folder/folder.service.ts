@@ -52,4 +52,26 @@ export class FolderService {
 
     return deletedFolder;
   }
+
+  async moveDocumentsToFolder(folderId: string, documentIds: string[]): Promise<Folder> {
+    const folder = await this.folderModel.findById(folderId);
+    if (!folder) {
+      throw new NotFoundException('Folder not found');
+    }
+  
+    // Ajoutez les nouveaux documentIds à la liste existante des documents du dossier
+    folder.documents = [...folder.documents, ...documentIds];
+  
+    // Mettez à jour l'attribut de dossier de chaque document
+    for (const documentId of documentIds) {
+      const document = await this.documentModel.findById(documentId);
+      if (document) {
+        document.folder = folder; // Attribuer l'objet Folder, pas seulement l'ID
+        await document.save();
+      }
+    }
+  
+    await folder.save();
+    return folder;
+  }
 }

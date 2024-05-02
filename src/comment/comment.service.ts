@@ -80,7 +80,7 @@ export class CommentService {
     return comment;
   }
   async findCommentByIdDoc(iddoc: string): Promise<Comment[]> {
-    const comments = await this.commentModel.find({ document: iddoc }).exec();
+    const comments = await this.commentModel.find({ document: iddoc }).populate('owner', 'firstname lastname profileImage').lean().exec();
     return comments;
 }
 
