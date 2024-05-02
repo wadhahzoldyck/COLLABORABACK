@@ -1,5 +1,5 @@
 // comment.controller.ts
-import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, Query } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { Reply } from '../reply/schema/reply.schema';
 
@@ -7,19 +7,30 @@ import { Reply } from '../reply/schema/reply.schema';
 export class CommentController {
   constructor(private readonly commentService: CommentService) { }
 
-  // @Post()
-  // async create(@Body() commentData: any) {
-  //   return this.commentService.create(commentData);
-  // }
-
   @Post(':documentId/:userId')
-    async createComment(@Param('documentId') documentId: string, @Param('userId') userId: string,@Body('commentaire') comment: string) {
-    try {
-      const createdComment = await this.commentService.createWithDocumentIdUserId(documentId, userId, comment);
+    async createComment(@Param('documentId') documentId: string, @Param('userId') userId: string,@Body('commentaire') comment: string,@Body('analyze') analyze: string) {
+    console.log(analyze);
+      try {
+      const createdComment = await this.commentService.createWithDocumentIdUserId(documentId, userId, comment,analyze);
       return createdComment;
     } catch (error) {
       throw error;
     }
+  }
+  @Get('analyze')
+  async analyzeText(@Query('text') text: string) {
+  
+    let TransformersApi  = Function('return import("@xenova/transformers")')();
+  
+    const { pipeline, env } = await TransformersApi;
+    const pipe = await pipeline("text-classification","Xenova/distilbert-base-uncased-finetuned-sst-2-english");
+  
+    if (!text) {
+      return { error: 'Text query parameter is required' };
+    }
+    const result = await pipe(text); 
+  
+    return result;
   }
   @Get(':iddoc')
   async showByDoc(@Param('iddoc') iddoc: string) {

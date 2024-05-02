@@ -17,7 +17,7 @@ export class CommentService {
     @InjectModel(User.name) private readonly userModel: Model<User>, // Injection du modèle User
 
     ) {}
-  async createWithDocumentIdUserId(docid:string, userId: string, comment:string): Promise<Comment> {
+  async createWithDocumentIdUserId(docid:string, userId: string, comment:string,analyze:string): Promise<Comment> {
     try {
       // Vérifiez si le document existe réellement
       const document = await this.documentModel.findById(docid);
@@ -36,6 +36,7 @@ export class CommentService {
         commentaire: comment,
         document: document,
         owner: user,
+        feeling:analyze
       });
 
       return createdComment.save();
