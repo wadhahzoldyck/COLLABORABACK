@@ -1,13 +1,13 @@
 // workspace.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document as MongooseDocument, Schema as MongooseSchema } from 'mongoose';
+import {  Schema as MongooseSchema } from 'mongoose';
 import { Document } from '../../document/schema/document.schema'; // Assuming the path to Document schema
 import { User } from '../../auth/schema/user.schema';
 
 @Schema({
   timestamps: true,
 })
-export class Workspace extends MongooseDocument {
+export class Workspace  {
 
 
   @Prop({ type: String, required: true })
@@ -19,8 +19,8 @@ export class Workspace extends MongooseDocument {
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
   users: User[];
 
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Document' }], default: [] })
-  documents: Document[];
+  @Prop() // Modifiez cette ligne pour accepter une chaîne de caractères
+  documents?: string[];
 
   @Prop({ type: String, required: true })
   accessCode: string;

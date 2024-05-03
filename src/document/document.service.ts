@@ -1,3 +1,4 @@
+import { Workspace } from './../workspace/schema/workspace.schema';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
@@ -14,6 +15,8 @@ export class DocumentService {
     @InjectModel(Document.name) private readonly documentModel: Model<Document>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
+    @InjectModel(Workspace.name) private readonly workspaceModal: Model<Workspace>,
+
   ) {}
 
   async getDocumentById(id: string): Promise<Document> {
@@ -124,14 +127,26 @@ export class DocumentService {
     }));
   }
 
-  async findDocumentsWithoutFolder(): Promise<Document[]> {
+  async findDocumentsWithoutFolderAndNotInAnyWorkspace(): Promise<Document[]> {
     try {
-      const documentsWithoutFolder = await this.documentModel
-        .find({ folder: null })
-        .exec();
-      return documentsWithoutFolder;
+      // Fetch all workspaces
+      const workspaces = await this.workspaceModal.find().exec();
+      // Extract all document IDs from workspaces
+      const documentIdsInWorkspaces = new Set(workspaces.flatMap(workspace => workspace.documents));
+
+      // Find documents that are not in any workspace and have no folder
+      const documents = await this.documentModel.find({
+        _id: { $nin: Array.from(documentIdsInWorkspaces) },
+        folder: null
+      }).exec();
+
+      if (documents.length === 0) {
+        throw new NotFoundException('No documents without folder and not in any workspace found');
+      }
+
+      return documents;
     } catch (error) {
-      throw new NotFoundException('Documents without folder not found');
+      throw new NotFoundException(`Failed to find documents: ${error.message}`);
     }
   }
 
