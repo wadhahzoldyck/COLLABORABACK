@@ -1,11 +1,11 @@
 // versioning.controller.ts
-import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, Body, Res, } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, NotFoundException, InternalServerErrorException, Put, Body, Res, Query, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Document as DocumentModel } from '../document/schema/document.schema';
 import { Versioning } from './schema/versioning.schema';
 import { AddHistoryDto } from './dto/versioning.dto';
-import sharp from 'sharp';
+
 
 
 interface Inserts {
@@ -302,7 +302,7 @@ export class VersionController {
 
 
 
-  @Get(':id/traslate')
+  @Get(':id/translate')
   async getTranslation(@Param('id') id: string): Promise<any> {
     try {
 
@@ -321,7 +321,7 @@ export class VersionController {
       const ops = insets.ops || [];
 
       let concatenatedText = '';
-      for (const op of ops) {
+      for (const op of ops) {if(!op.insert.video || !op.insert.image )
         concatenatedText += op.insert;
       }
       console.log(concatenatedText);
@@ -329,7 +329,7 @@ export class VersionController {
     
       let pipe = await pipeline('translation');
 
-      const result = await pipe(concatenatedText,{
+      let result = await pipe(concatenatedText, {
         src_lang: 'eng_Latn',
         tgt_lang: 'ell_Grek'
         });
@@ -388,6 +388,45 @@ export class VersionController {
       console.error("Error in getImageToText:", error);
     }
   }
+
+
+
+
+
+  @Get(':id/answer')
+  async getanswer(@Param('id') id: string,@Query('question') question: string): Promise<any> {
+    try {
+
+      const doc = await this.documentModel.findById(id).exec();
+      let TransformersApi  = Function('return import("@xenova/transformers")')();
+   
+      const insets: any = doc.data;
+      if (!insets) {
+        throw new NotFoundException('data document not found');
+      }
+
+      // Log the insets to see its structure
+      console.log("Insets:", insets);
+
+      // Access the 'ops' array if it exists
+      const ops = insets.ops || [];
+
+      let concatenatedText = '';
+      for (const op of ops) {if(!op.insert.video || !op.insert.image )
+        concatenatedText += op.insert;
+      }
+      console.log(concatenatedText);
+      const { pipeline, env } = await TransformersApi;
+      let pipe = await pipeline('question-answering');     
+      console.log("text",concatenatedText ) 
+      console.log(question)
+      let result = pipe(question,concatenatedText)
+      console.log("result",result);
+      console.log("fama answer")
+      return result;
+    } catch (error) {
+      console.error("Error in getText:", error);
+      throw error; // Handle the error appropriately
+    }
 }
-
-
+}
