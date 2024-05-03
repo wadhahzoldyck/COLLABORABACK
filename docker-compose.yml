@@ -15,9 +15,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ahmedbelhaj2/collaboradocdocker:1.0
+    image: ahmedbelhaj2/collaboradocsss:1.0
     restart: always
-    container_name: collaboradocdockers
+    container_name: collaboradocsss
     ports:
       - '3000:3000'
     depends_on:
