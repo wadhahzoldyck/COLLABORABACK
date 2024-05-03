@@ -1,8 +1,8 @@
 version: '3.8'
 services:
-  db:
+  data:
     image: mongo:4.2
-    container_name: db
+    container_name: data
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: collaboradocs
@@ -21,4 +21,4 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      - db
+      - data
