@@ -280,9 +280,7 @@ export class VersionController {
       }
       console.log(concatenatedText);
       const { pipeline, env } = await TransformersApi;
-      env.allowRemoteModels = false;
-      env.localModelPath = 'C:/Users/haithem/Desktop/node/COLLABORABACK/node_modules/@xenova/transformers/src/models.js/Xenova/distilbart-cnn-6-6';
-      const pipe = await pipeline("summarization","Xenova/distilbart-cnn-6-6");
+            const pipe = await pipeline("summarization","Xenova/distilbart-cnn-6-6");
 
 
       const result = await pipe(concatenatedText,{max_length: 30}); 

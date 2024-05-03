@@ -9,11 +9,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { DocumentService } from './document.service';
 import { Document } from './schema/document.schema';
 import { AddUserToDocumentDto } from './dto/document.dto';
 import { UserDataDTO } from '../auth/dto/userdata.dto';
+import { FilterDocumentDto } from './dto/FilterDocumentDto.dto';
 
 @Controller('document')
 export class DocumentController {
@@ -50,7 +52,10 @@ export class DocumentController {
   }
 
   @Delete(':documentId/users/:userId')
-  async removeUserFromDocument(@Param('documentId') documentId: string, @Param('userId') userId: string): Promise<void> {
+  async removeUserFromDocument(
+    @Param('documentId') documentId: string,
+    @Param('userId') userId: string,
+  ): Promise<void> {
     try {
       await this.documentService.removeUserFromDocument(documentId, userId);
     } catch (error) {
@@ -61,6 +66,14 @@ export class DocumentController {
     }
   }
 
+  @Get('/filter-by-date/:userId')
+  async getDocumentsByDateRange(
+    @Query() filterDto: FilterDocumentDto,
+    @Param('userId') userId: string,
+  ): Promise<Document[]> {
+    return this.documentService.getDocumentsByDateRange(filterDto, userId);
+  }
+
   @Get(':id/access-users')
   async getUsersWithAccess(
     @Param('id') id: string,
@@ -68,27 +81,33 @@ export class DocumentController {
     return this.documentService.getUsersWithAccess(id);
   }
 
-  @Get('withoutFolder')
-  async findDocumentsWithoutFolder(): Promise<Document[]> {
-    return this.documentService.findDocumentsWithoutFolderAndNotInAnyWorkspace();
+  @Get('withoutFolder/:iduser')
+  async findDocumentsWithoutFolder(@Param('iduser') userId: string
+): Promise<Document[]> {
+    return this.documentService.findDocumentsBasedOnUserAccess(userId);
   }
 
-  
   @Patch(':idDoc/users/:idUser/access')
   async updateDocumentAccess(
     @Param('idDoc') idDoc: string,
     @Param('idUser') idUser: string,
-    @Body('accessLevel') accessLevel: 'readOnly' | 'readWrite'
+    @Body('accessLevel') accessLevel: 'readOnly' | 'readWrite',
   ) {
     if (!['readOnly', 'readWrite'].includes(accessLevel)) {
-      throw new BadRequestException('Invalid access level. Valid values are "readOnly" or "readWrite".');
+      throw new BadRequestException(
+        'Invalid access level. Valid values are "readOnly" or "readWrite".',
+      );
     }
-    
+
     try {
-      const updatedDocument = await this.documentService.updateAccess(idDoc, idUser, accessLevel);
+      const updatedDocument = await this.documentService.updateAccess(
+        idDoc,
+        idUser,
+        accessLevel,
+      );
       return {
         message: 'Access level updated successfully',
-        data: updatedDocument
+        data: updatedDocument,
       };
     } catch (error) {
       throw new NotFoundException(error.message);
