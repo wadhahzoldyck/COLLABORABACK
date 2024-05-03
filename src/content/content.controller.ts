@@ -5,6 +5,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -26,6 +27,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response, query } from 'express';
 import { CloudinaryService } from '../../CloudinaryService';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @ApiTags('Content Module')
 @Controller('content')
@@ -33,6 +36,7 @@ export class ContentController {
   constructor(
     private readonly contentService: ContentService,
     private readonly cloudinaryService: CloudinaryService,
+    @InjectModel(Content.name) private readonly contentModel: Model<Content>,
   ) {}
 
   @Post()
@@ -268,6 +272,34 @@ export class ContentController {
       await cloudinary.uploader.destroy(id);
     } catch (error) {
       throw new Error('Failed to delete file');
+    }
+  }
+
+  @Get(':id/image')
+  async getImageToText(@Param('id') id: string): Promise<any> {
+    try {
+      const doc = await this.contentModel.findById(id).exec();
+      let TransformersApi = Function('return import("@xenova/transformers")')();
+
+      const url = doc.attachmentUrl;
+
+
+      console.log("Image:", url);
+
+      // Transform the image to text
+      const { pipeline } = await TransformersApi;
+      const pipe = await pipeline('image-to-text');
+      console.log("Text from image:", url);
+
+      // // Convert image to JPG using sharp
+      // const jpgBuffer = await sharp(Buffer.from(image, 'base64')).toFormat('jpeg').toBuffer();
+
+      const result = await pipe(url);
+
+      // Send the JPG image as response
+      return result;
+    } catch (error) {
+      console.error("Error in getImageToText:", error);
     }
   }
 }
