@@ -1,16 +1,16 @@
 version: '3.8'
 services:
-  database:
+  db:
     image: mongo:4.2
-    container_name: database
+    container_name: db
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: collaboradocs
       MONGO_INITDB_ROOT_PASSWORD: collaboradocs
     ports:
-      - '27017:27018'
+      - '27017:27017'
     volumes:
-      - ./data/database:/dump # Corrected volume syntax
+      - ./data/db:/dump # Corrected volume syntax
   collaboradocs:
     build:
       context: .
@@ -21,4 +21,4 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      - database
+      - db
