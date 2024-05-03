@@ -8,7 +8,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: collaboradocs
       MONGO_INITDB_ROOT_PASSWORD: collaboradocs
     ports:
-      - '27017:27017'
+      - '27017:27018'
     volumes:
       - ./data/database:/dump # Corrected volume syntax
   collaboradocs:
