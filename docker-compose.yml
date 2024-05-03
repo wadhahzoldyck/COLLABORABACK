@@ -11,13 +11,13 @@ services:
       - '27017:27017'
     volumes:
       - ./data/db:/dump # Corrected volume syntax
-  collaboradocs:
+  collaboradocsss:
     build:
       context: .
       dockerfile: Dockerfile
     image: ahmedbelhaj2/collaboradocdocker:1.0
     restart: always
-    container_name: collaboradocdocker
+    container_name: collaboradocdockers
     ports:
       - '3000:3000'
     depends_on:
