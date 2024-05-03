@@ -10,7 +10,7 @@ import { Access, AccessSchema } from './Access.schema'; // Import Access schema
 @Schema({
   timestamps: true,
 })
-export class Document extends MongooseDocument {
+export class Document  {
   @Prop()
   _id: string;
 

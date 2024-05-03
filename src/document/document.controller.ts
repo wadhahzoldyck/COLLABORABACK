@@ -70,7 +70,7 @@ export class DocumentController {
 
   @Get('withoutFolder')
   async findDocumentsWithoutFolder(): Promise<Document[]> {
-    return this.documentService.findDocumentsWithoutFolder();
+    return this.documentService.findDocumentsWithoutFolderAndNotInAnyWorkspace();
   }
 
   
