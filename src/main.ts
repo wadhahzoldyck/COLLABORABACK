@@ -12,7 +12,7 @@ async function bootstrap() {
       'http://localhost:5173',
       'http://localhost:3001',
       'http://localhost:3002',
-      'https://collaborafront.vercel.app'
+      'https://collaborafront.vercel.app',
     ],
     credentials: true,
   });
@@ -22,8 +22,9 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   app.use(cookiesParser());
+  const port = process.env.PORT ;
 
-  await app.listen(3000);
+  await app.listen(port);
 }
 
 bootstrap();
