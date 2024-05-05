@@ -8,6 +8,7 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { CreateWorkspaceDto } from './schema/createworkspace.dto';
@@ -62,8 +63,6 @@ export class WorkspaceController {
     return this.workspaceService.findWorkspacesAndDocumentsByUser(userId);
   }
 
-
-  
   @Post(':workspaceId/documents')
   @HttpCode(HttpStatus.CREATED)
   async addNewDocumentToWorkspace(
@@ -80,4 +79,13 @@ export class WorkspaceController {
       iddoc,
     );
   }
+
+  @Post(':email/send-access-code/:accessCode')
+  async sendAccessCodeByEmail(@Param('email') email: string, @Param('accessCode') accessCode: string) {
+  
+
+    // Send access code to the user via email
+    await this.workspaceService.sendAccessCodeByEmail(email, accessCode);
+  }
+
 }
