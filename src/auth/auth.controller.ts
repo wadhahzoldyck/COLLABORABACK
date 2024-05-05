@@ -155,6 +155,22 @@ export class AuthController {
     }
   }
 
+  @Get('search/workspace')
+  async searchUsers2(
+    @Query('q') query: string
+  ) {
+    try {
+      const users = await this.authService.searchUsers2(query);
+      console.log(users);
+      return users;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw new Error('Error searching users');
+    }
+  }
+
+  
+
   @Put('profile/:userId')
   async updateProfile(
     @Param('userId') userId: string,

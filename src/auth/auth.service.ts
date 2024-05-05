@@ -327,6 +327,26 @@ export class AuthService {
     }
   }
 
+  async searchUsers2(query: string): Promise<User[]> {
+    try {
+      const regex = new RegExp(query, 'i');
+      const users = await this.userModel
+        .find({
+          $or: [
+            { firstname: { $regex: regex } },
+            { lastname: { $regex: regex } },
+            { email: { $regex: regex } },
+          ],
+        })
+        .lean()
+        .exec();
+      return users;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw new Error('Error searching users');
+    }
+  }
+
   async updateProfile(userId: string, dto: updateProfil): Promise<User> {
     try {
       const user = await this.userModel.findById(userId).exec();

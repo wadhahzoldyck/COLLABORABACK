@@ -11,6 +11,7 @@ import { UpdateWorkspaceDto } from './schema/updateworkspace.dto';
 import { User } from '../auth/schema/user.schema';
 import { Document } from '../document/schema/document.schema';
 import { documents } from '../versioning/mock-data';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class WorkspaceService {
@@ -18,6 +19,7 @@ export class WorkspaceService {
     @InjectModel(Workspace.name) private workspaceModel: Model<Workspace>,
     @InjectModel(User.name) private userMolde: Model<User>,
     @InjectModel(Document.name) private documentModel: Model<Document>,
+    private mailerService: MailerService,
   ) {}
 
   async create(createWorkspaceDto: CreateWorkspaceDto): Promise<Workspace> {
@@ -76,50 +78,57 @@ export class WorkspaceService {
   }
   async findWorkspacesByUser(userId: string): Promise<any> {
     // Fetch all workspaces where the user is either an owner or a user
-    const workspaces = await this.workspaceModel.find({
-      $or: [{ owner: userId }, { users: userId }]
-    }).exec();
-  
+    const workspaces = await this.workspaceModel
+      .find({
+        $or: [{ owner: userId }, { users: userId }],
+      })
+      .exec();
+
     // Collect all document IDs from the fetched workspaces
     const documentIds = workspaces.reduce((acc, workspace) => {
       // Assume workspace.documents is an array of document IDs
       return acc.concat(workspace.documents);
     }, []);
-  
+
     // Fetch documents where their ID is in the collected document IDs
-    const documents = await this.documentModel.find({
-      _id: { $in: documentIds }
-    }).exec();
-  
-    return {documents,workspaces};
+    const documents = await this.documentModel
+      .find({
+        _id: { $in: documentIds },
+      })
+      .exec();
+
+    return { documents, workspaces };
   }
 
   async findWorkspacesAndDocumentsByUser(userId: string): Promise<any> {
     // Fetch all workspaces where the user is either an owner or a user
-    const workspaces = await this.workspaceModel.find({
-      $or: [{ owner: userId }, { users: { $in: [userId] } }]
-    }).exec();
+    const workspaces = await this.workspaceModel
+      .find({
+        $or: [{ owner: userId }, { users: { $in: [userId] } }],
+      })
+      .exec();
 
     if (workspaces.length === 0) {
       throw new NotFoundException('No workspaces found for the user');
     }
 
     // An array to collect promises for fetching documents of each workspace
-    const documentsPromises = workspaces.map(workspace =>
-      this.documentModel.find({
-        _id: { $in: workspace.documents }
-      }).exec().then(documents => ({
-        workspaceId: workspace._id,
-        documents
-      }))
+    const documentsPromises = workspaces.map((workspace) =>
+      this.documentModel
+        .find({
+          _id: { $in: workspace.documents },
+        })
+        .exec()
+        .then((documents) => ({
+          workspaceId: workspace._id,
+          documents,
+        })),
     );
 
     const documentsByWorkspace = await Promise.all(documentsPromises);
 
     return { workspaces, documentsByWorkspace };
-}
-
-  
+  }
 
   async addUserToWorkspaceByAccessCode(
     userId: string,
@@ -171,7 +180,27 @@ export class WorkspaceService {
     const doc = await newDocument.save();
     workspace.documents.push(iddoc);
     const document = this.documentModel.findById(iddoc);
-     await workspace.save();
-     return document
+    await workspace.save();
+    return document;
+  }
+
+  async sendAccessCodeByEmail(
+    email: string,
+    accessCode: string,
+  ): Promise<void> {
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Your Access Code',
+        html: `
+          <h1>Your Access Code</h1>
+          <p>Your access code is: <strong>${accessCode}</strong></p>
+          <p>Use this access code to join the workspace.</p>
+        `,
+      });
+    } catch (error) {
+      console.error('Error sending access code email:', error);
+      throw new Error('Failed to send access code email');
+    }
   }
 }
