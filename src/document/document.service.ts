@@ -1,3 +1,4 @@
+import { Workspace } from './../workspace/schema/workspace.schema';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
@@ -7,6 +8,7 @@ import { UserDataDTO } from '../auth/dto/userdata.dto';
 import { User } from '../auth/schema/user.schema';
 
 import { Folder } from '../folder/schema/folder.schema';
+import { FilterDocumentDto } from './dto/FilterDocumentDto.dto';
 
 @Injectable()
 export class DocumentService {
@@ -14,6 +16,8 @@ export class DocumentService {
     @InjectModel(Document.name) private readonly documentModel: Model<Document>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Folder.name) private readonly folderModel: Model<Folder>,
+    @InjectModel(Workspace.name)
+    private readonly workspaceModal: Model<Workspace>,
   ) {}
 
   async getDocumentById(id: string): Promise<Document> {
@@ -124,16 +128,44 @@ export class DocumentService {
     }));
   }
 
-  async findDocumentsWithoutFolder(): Promise<Document[]> {
+  async findDocumentsBasedOnUserAccess(userId: string): Promise<Document[]> {
     try {
-      const documentsWithoutFolder = await this.documentModel
-        .find({ folder: null })
+      // Fetch all document IDs from workspaces
+      const workspaces = await this.workspaceModal.find().exec();
+      const documentIdsInWorkspaces = new Set(
+        workspaces.flatMap(workspace => workspace.documents),
+      );
+  
+      // Query for documents where the user is either an owner (of documents without a folder)
+      // or is listed in the usersWithAccess regardless of the folder status
+      const documents = await this.documentModel
+        .find({
+          _id: { $nin: Array.from(documentIdsInWorkspaces) }, // Exclude documents that are in any workspace
+          $or: [
+            { owner: userId, folder: null }, // User is the owner and document is not in a folder
+            { 'usersWithAccess.user': userId } // User is in the access list (regardless of folder)
+          ]
+        })
+        .populate({
+          path: 'usersWithAccess.user',
+          model: 'User'
+        })
         .exec();
-      return documentsWithoutFolder;
+  
+      if (documents.length === 0) {
+        throw new NotFoundException(
+          'No accessible documents found based on user ID criteria: ownership without folder or listed in access list.'
+        );
+      }
+  
+      return documents;
     } catch (error) {
-      throw new NotFoundException('Documents without folder not found');
+      throw new NotFoundException(`Failed to find documents: ${error.message}`);
     }
   }
+  
+
+
 
   async updateDocument(
     documentId: string,
@@ -168,27 +200,74 @@ export class DocumentService {
       .populate('owner')
       .populate({
         path: 'usersWithAccess.user',
-        model: 'User', 
+        model: 'User',
       })
       .lean()
       .exec();
   }
+  async getDocumentsByDateRange(
+    filterDto: FilterDocumentDto,
+    userId: string,
+  ): Promise<Document[]> {
+    const { startDate, endDate } = filterDto;
+    const documents = await this.documentModel
+      .find({
+        $and: [
+          {
+            createdAt: {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate),
+            }
+          },
+          {
+            $or: [
+              { owner: userId },
+              { 'usersWithAccess.user': userId }
+            ]
+          }
+        ]
+      })
+      .populate('owner')
+      .populate({
+        path: 'usersWithAccess.user',
+        model: 'User',
+      })
+      .lean()
+      .exec();
+  
+    if (!documents.length) {
+      throw new NotFoundException('No documents found within the given date range for the specified user');
+    }
+  
+    return documents;
+  }
+  
 
-  async updateAccess(idDoc: string, idUser: string, newAccessLevel: 'readOnly' | 'readWrite') {
-    const document = await this.documentModel.findById(idDoc).populate('usersWithAccess.user');
+  async updateAccess(
+    idDoc: string,
+    idUser: string,
+    newAccessLevel: 'readOnly' | 'readWrite',
+  ) {
+    const document = await this.documentModel
+      .findById(idDoc)
+      .populate('usersWithAccess.user');
     if (!document) {
       throw new NotFoundException(`Document with ID ${idDoc} not found`);
     }
 
-    const userIndex = document.usersWithAccess.findIndex(access => access.user._id.toString() === idUser);
+    const userIndex = document.usersWithAccess.findIndex(
+      (access) => access.user._id.toString() === idUser,
+    );
 
     if (userIndex !== -1) {
       document.usersWithAccess[userIndex].accessLevel = newAccessLevel;
     } else {
-      throw new NotFoundException(`User with ID ${idUser} not found in document`);
+      throw new NotFoundException(
+        `User with ID ${idUser} not found in document`,
+      );
     }
 
-    await document.save();  
-    return document;  
+    await document.save();
+    return document;
   }
 }

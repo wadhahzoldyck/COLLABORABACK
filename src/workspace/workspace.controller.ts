@@ -8,6 +8,7 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { CreateWorkspaceDto } from './schema/createworkspace.dto';
@@ -46,21 +47,45 @@ export class WorkspaceController {
     await this.workspaceService.delete(id);
   }
 
-  @Post(':id/users/:userId')
+  @Post(':userId/add-to-workspace')
   async addUserToWorkspace(
     @Param('userId') userId: string,
-    @Param('id') workspaceId: string,
     @Body('accessCode') accessCode: string,
   ) {
-    return this.workspaceService.addUserToWorkspace(
+    return this.workspaceService.addUserToWorkspaceByAccessCode(
       userId,
       accessCode,
-      workspaceId,
     );
   }
 
   @Get('by-user/:userId')
   async findWorkspacesByUser(@Param('userId') userId: string) {
-    return this.workspaceService.findWorkspacesByUser(userId);
+    return this.workspaceService.findWorkspacesAndDocumentsByUser(userId);
   }
+
+  @Post(':workspaceId/documents')
+  @HttpCode(HttpStatus.CREATED)
+  async addNewDocumentToWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @Body('documentName') documentName: string,
+    @Body('ownerId') ownerId: string,
+    @Body('iddoc') iddoc: string,
+  ): Promise<any> {
+    console.log(iddoc, ' iddoc');
+    return await this.workspaceService.addNewDocumentToWorkspace(
+      workspaceId,
+      documentName,
+      ownerId,
+      iddoc,
+    );
+  }
+
+  @Post(':email/send-access-code/:accessCode')
+  async sendAccessCodeByEmail(@Param('email') email: string, @Param('accessCode') accessCode: string) {
+  
+
+    // Send access code to the user via email
+    await this.workspaceService.sendAccessCodeByEmail(email, accessCode);
+  }
+
 }
