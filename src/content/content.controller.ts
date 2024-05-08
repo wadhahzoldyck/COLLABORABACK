@@ -269,7 +269,7 @@ export class ContentController {
   async deleteFileFromCloud(@Param('id')id: string): Promise<void> {
     try {
       console.log(id);
-      await cloudinary.uploader.destroy(id);
+      await cloudinary.uploader.  destroy(id);
     } catch (error) {
       throw new Error('Failed to delete file');
     }

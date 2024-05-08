@@ -130,42 +130,49 @@ export class DocumentService {
 
   async findDocumentsBasedOnUserAccess(userId: string): Promise<Document[]> {
     try {
+      const folders = await this.folderModel.find({ owner: userId });
+      const docs=[]
+      folders.forEach(f => {
+        f.documents.forEach(d => {
+          docs.push(d)
+        });
+      });
+      console.log(docs)
+     
       // Fetch all document IDs from workspaces
       const workspaces = await this.workspaceModal.find().exec();
       const documentIdsInWorkspaces = new Set(
-        workspaces.flatMap(workspace => workspace.documents),
+        workspaces.flatMap((workspace) => workspace.documents),
       );
-  
-      // Query for documents where the user is either an owner (of documents without a folder)
-      // or is listed in the usersWithAccess regardless of the folder status
+
+      // Query for documents where the user is either an owner or is listed in the usersWithAccess,
+      // and ensure that these documents are not in any folder
       const documents = await this.documentModel
         .find({
           _id: { $nin: Array.from(documentIdsInWorkspaces) }, // Exclude documents that are in any workspace
           $or: [
-            { owner: userId, folder: null }, // User is the owner and document is not in a folder
-            { 'usersWithAccess.user': userId } // User is in the access list (regardless of folder)
-          ]
+            { owner: userId, folder: null }, // User is the owner
+            { 'usersWithAccess.user': userId }, // User is in the access list
+          ],
         })
         .populate({
           path: 'usersWithAccess.user',
-          model: 'User'
+          model: 'User',
         })
         .exec();
-  
+
+
       if (documents.length === 0) {
         throw new NotFoundException(
-          'No accessible documents found based on user ID criteria: ownership without folder or listed in access list.'
+          'No accessible documents found based on user ID criteria: ownership or listed in access list, with no folder association.',
         );
       }
-  
-      return documents;
+      const documentsfiltred=documents.filter(item=> !docs.some(item2 => item2 == item._id))
+      return documentsfiltred;
     } catch (error) {
       throw new NotFoundException(`Failed to find documents: ${error.message}`);
     }
   }
-  
-
-
 
   async updateDocument(
     documentId: string,
@@ -217,15 +224,12 @@ export class DocumentService {
             createdAt: {
               $gte: new Date(startDate),
               $lte: new Date(endDate),
-            }
+            },
           },
           {
-            $or: [
-              { owner: userId },
-              { 'usersWithAccess.user': userId }
-            ]
-          }
-        ]
+            $or: [{ owner: userId }, { 'usersWithAccess.user': userId }],
+          },
+        ],
       })
       .populate('owner')
       .populate({
@@ -234,14 +238,15 @@ export class DocumentService {
       })
       .lean()
       .exec();
-  
+
     if (!documents.length) {
-      throw new NotFoundException('No documents found within the given date range for the specified user');
+      throw new NotFoundException(
+        'No documents found within the given date range for the specified user',
+      );
     }
-  
+
     return documents;
   }
-  
 
   async updateAccess(
     idDoc: string,

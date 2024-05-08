@@ -24,7 +24,6 @@ export class CloudinaryService {
 
   async fetchImagesCloudinary(authenticatedUser: any) {
     try {
-      console.log(authenticatedUser);
       const { resources } = await cloudinary.search
         .expression(`folder:collaboradoc AND tags:${authenticatedUser}`)
         .execute();
@@ -34,7 +33,6 @@ export class CloudinaryService {
         name: resource.filename,
         id: resource.public_id,
       }));
-      console.log('imagesData', imagesData);
       return imagesData;
     } catch (error) {
       console.error('Error fetching images from Cloudinary:', error);
@@ -47,7 +45,6 @@ export class CloudinaryService {
     authenticatedUser: any,
   ): Promise<Content> {
     try {
-      console.log('id', authenticatedUser);
       const tags = [authenticatedUser];
       const result = await cloudinary.uploader.upload(file.path, {
         folder: 'collaboradoc',
@@ -55,7 +52,6 @@ export class CloudinaryService {
         public_id: `user-${authenticatedUser}-${file.originalname}`,
         tags: tags,
       });
-      console.log(result);
       const fileUrl = result.secure_url;
       const publicId = result.public_id;
       const name = file.originalname;
