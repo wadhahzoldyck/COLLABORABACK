@@ -197,7 +197,7 @@ export class AuthService {
   async forgotPassword(email: string) {
     const token = Math.random().toString(20).substring(2, 12);
     await this.resetModel.create({ email: email, token: token });
-    const url = `http://localhost:5173/reset/${token}`;
+    const url = `https://collaborafront.vercel.app/reset/${token}`;
     await this.mailerService.sendMail({
       to: email,
       subject: 'Reset Your Password',
