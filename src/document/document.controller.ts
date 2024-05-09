@@ -5,10 +5,13 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { DocumentService } from './document.service';
@@ -82,8 +85,9 @@ export class DocumentController {
   }
 
   @Get('withoutFolder/:iduser')
-  async findDocumentsWithoutFolder(@Param('iduser') userId: string
-): Promise<Document[]> {
+  async findDocumentsWithoutFolder(
+    @Param('iduser') userId: string,
+  ): Promise<Document[]> {
     return this.documentService.findDocumentsBasedOnUserAccess(userId);
   }
 
@@ -109,6 +113,38 @@ export class DocumentController {
         message: 'Access level updated successfully',
         data: updatedDocument,
       };
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  @Delete(':documentId')
+  async deleteDocument(@Param('documentId') documentId: string): Promise<void> {
+    try {
+      await this.documentService.deleteDocument(documentId);
+    } catch (error) {
+      if (error.status === 404) {
+        throw new NotFoundException(`Document with ID ${documentId} not found`);
+      } else {
+        throw new HttpException(
+          'Failed to delete the document',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  @Put(':id')
+  async updateDocumentName(
+    @Param('id') documentId: string,
+    @Body('name') newName: string,
+  ) {
+    try {
+      const updatedDocument = await this.documentService.updateDocumentname(
+        documentId,
+        newName,
+      );
+      return updatedDocument;
     } catch (error) {
       throw new NotFoundException(error.message);
     }
