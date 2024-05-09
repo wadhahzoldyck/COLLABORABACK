@@ -131,14 +131,14 @@ export class DocumentService {
   async findDocumentsBasedOnUserAccess(userId: string): Promise<Document[]> {
     try {
       const folders = await this.folderModel.find({ owner: userId });
-      const docs=[]
-      folders.forEach(f => {
-        f.documents.forEach(d => {
-          docs.push(d)
+      const docs = [];
+      folders.forEach((f) => {
+        f.documents.forEach((d) => {
+          docs.push(d);
         });
       });
-      console.log(docs)
-     
+      console.log(docs);
+
       // Fetch all document IDs from workspaces
       const workspaces = await this.workspaceModal.find().exec();
       const documentIdsInWorkspaces = new Set(
@@ -161,13 +161,14 @@ export class DocumentService {
         })
         .exec();
 
-
       if (documents.length === 0) {
         throw new NotFoundException(
           'No accessible documents found based on user ID criteria: ownership or listed in access list, with no folder association.',
         );
       }
-      const documentsfiltred=documents.filter(item=> !docs.some(item2 => item2 == item._id))
+      const documentsfiltred = documents.filter(
+        (item) => !docs.some((item2) => item2 == item._id),
+      );
       return documentsfiltred;
     } catch (error) {
       throw new NotFoundException(`Failed to find documents: ${error.message}`);
@@ -274,5 +275,35 @@ export class DocumentService {
 
     await document.save();
     return document;
+  }
+
+  async deleteDocument(documentId: string): Promise<void> {
+    const document = await this.documentModel.findById(documentId);
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${documentId} not found`);
+    }
+
+    await this.documentModel.deleteOne({ _id: documentId });
+  }
+
+  async updateDocumentname(
+    documentId: string,
+    newName: string,
+  ): Promise<Document> {
+    try {
+      const updatedDocument = await this.documentModel.findByIdAndUpdate(
+        documentId,
+        { documentName: newName },
+          { new: true },
+      );
+
+      if (!updatedDocument) {
+        throw new NotFoundException(`Document with ID ${documentId} not found`);
+      }
+
+      return updatedDocument;
+    } catch (error) {
+      throw new Error(`Failed to update document: ${error.message}`);
+    }
   }
 }
